@@ -1,0 +1,2 @@
+# pagine
+Static website generator.
