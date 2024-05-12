@@ -1,9 +1,14 @@
+// Copyright 2024 Jelly Terra
+// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0
+// that can be found in the LICENSE file and https://mozilla.org/MPL/2.0/.
+
 package page
 
 import (
 	"github.com/webpagine/pagine/util"
 	"html/template"
 	"io"
+	"os"
 )
 
 // Page is configuration of single page.
@@ -29,7 +34,12 @@ type Page struct {
 
 func (p *Page) Generate(w io.Writer) error {
 
-	t, err := template.New("").ParseFiles(p.TemplatePath)
+	templateBody, err := os.ReadFile(p.TemplatePath)
+	if err != nil {
+		return err
+	}
+
+	t, err := template.New(p.Path).Parse(string(templateBody))
 	if err != nil {
 		return err
 	}
@@ -43,11 +53,13 @@ func (p *Page) Generate(w io.Writer) error {
 			return err
 		}
 
+		// Template
 		err = t.Execute(w, data)
 		if err != nil {
 			return err
 		}
 	} else {
+		// Template
 		err = t.Execute(w, nil)
 		if err != nil {
 			return err

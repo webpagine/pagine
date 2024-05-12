@@ -7,8 +7,8 @@ Static website generator.
 
 Site decides
 
-- The shorts of various content root paths (relative).
-- Top level directory contents.
+- Top level directory contents, such as web site metadata.
+- Global elements.
 
 ### Page
 
