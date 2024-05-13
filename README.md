@@ -1,3 +1,6 @@
+
+<img src="https://github.com/jellyterra/artworks/raw/master/logo/pagine.svg" width="410.4" height="140" />
+
 # Pagine
 Static website generator.
 
