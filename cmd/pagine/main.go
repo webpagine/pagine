@@ -8,17 +8,19 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	. "github.com/webpagine/pagine/site"
-	"github.com/webpagine/pagine/util"
+	. "github.com/webpagine/go-pagine/path"
+	. "github.com/webpagine/go-pagine/site"
+	"github.com/webpagine/go-pagine/util"
 	"os"
 	"path/filepath"
 )
 
 var (
+	wd, _      = os.Getwd()
 	doGenerate = flag.Bool("gen", false, "GenerateAll site.")
 	doServe    = flag.Bool("serve", false, "Serve as HTTP.")
-	siteRoot   = flag.String("root", ".", "Site root.")
-	publicDir  = flag.String("public", "./public", "Location of generated site.")
+	siteRoot   = flag.String("root", wd, "Site root.")
+	publicDir  = flag.String("public", "../"+filepath.Base(wd)+".public", "Location of generated site.")
 )
 
 func main() {
@@ -38,9 +40,11 @@ func _main() error {
 		return errors.New("site root is required")
 	}
 
-	var site Site
+	var site = Site{
+		Root: NewPath(*siteRoot),
+	}
 
-	err := util.UnmarshalTOMLFile(filepath.Join(*siteRoot, "pagine.toml"), &site)
+	err := util.UnmarshalTOMLFile(site.Root.PathOf("/pagine.toml"), &site)
 	if err != nil {
 		return err
 	}

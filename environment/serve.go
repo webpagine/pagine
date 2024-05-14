@@ -6,7 +6,7 @@ package environment
 
 import (
 	"github.com/fsnotify/fsnotify"
-	. "github.com/webpagine/pagine/site"
+	. "github.com/webpagine/go-pagine/site"
 	"net/http"
 )
 

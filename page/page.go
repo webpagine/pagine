@@ -5,7 +5,7 @@
 package page
 
 import (
-	"github.com/webpagine/pagine/util"
+	"github.com/webpagine/go-pagine/util"
 	"html/template"
 	"io"
 	"os"
@@ -34,6 +34,7 @@ type Page struct {
 
 func (p *Page) Generate(w io.Writer) error {
 
+	// Parse Go template.
 	templateBody, err := os.ReadFile(p.TemplatePath)
 	if err != nil {
 		return err
@@ -44,7 +45,7 @@ func (p *Page) Generate(w io.Writer) error {
 		return err
 	}
 
-	// If has customized data.
+	// If the page has customized data (encoding in TOML), then add the data it contains.
 	if p.DataPath != "" {
 		var data map[string]any
 
@@ -54,13 +55,13 @@ func (p *Page) Generate(w io.Writer) error {
 		}
 
 		// Template
-		err = t.Execute(w, data)
+		err = t.Execute(w, data) // Yes
 		if err != nil {
 			return err
 		}
 	} else {
 		// Template
-		err = t.Execute(w, nil)
+		err = t.Execute(w, nil) // No
 		if err != nil {
 			return err
 		}

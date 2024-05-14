@@ -5,49 +5,48 @@
 package site
 
 import (
-	. "github.com/webpagine/pagine/page"
-	"github.com/webpagine/pagine/util"
-	"io/fs"
+	. "github.com/webpagine/go-pagine/page"
+	. "github.com/webpagine/go-pagine/path"
+	"github.com/webpagine/go-pagine/util"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 type Site struct {
-	Root string
+	Root Path
 }
 
-func (s *Site) ScanAll(path string) (pagePaths []string, err error) {
-	err = filepath.Walk(filepath.Join(s.Root, path), func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
+func (s *Site) GenerateAll(dest string) error {
 
-		if !info.IsDir() && filepath.Ext(path) == ".pagine" {
-			pagePaths = append(pagePaths, path)
-		}
+	var (
+		pagePathList   []string
+		staticPathList []string
+	)
 
-		return nil
-	})
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-func (s *Site) GenerateAll(dst string) error {
-	pagePaths, err := s.ScanAll(".")
+	pathList, err := s.Root.IterateFilesAsRelative()
 	if err != nil {
 		return err
 	}
 
+	for _, path := range pathList {
+		if strings.HasSuffix(path, ".pagine") {
+			pagePathList = append(pagePathList, path)
+		} else {
+			staticPathList = append(staticPathList, path)
+		}
+	}
+
+	errs := make(chan error, len(pathList))
+	var wg sync.WaitGroup
+
 	var pages []Page
 
-	for _, pagePath := range pagePaths {
+	for _, pagePath := range pagePathList {
 		var page Page
 
-		err = util.UnmarshalTOMLFile(pagePath, &page)
+		err = util.UnmarshalTOMLFile(s.Root.PathOf(pagePath), &page)
 		if err != nil {
 			return err
 		}
@@ -57,25 +56,71 @@ func (s *Site) GenerateAll(dst string) error {
 		pages = append(pages, page)
 	}
 
+	for _, staticPath := range staticPathList {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err = util.CopyFile(s.Root.PathOf(staticPath), filepath.Join(dest, staticPath))
+			if err != nil {
+				errs <- err
+			}
+		}()
+	}
+
+	// Generate pages.
+
 	for _, page := range pages {
-		outputPath, _ := strings.CutSuffix(page.Path, ".pagine")
 
-		absolutePath := filepath.Join(dst, outputPath)
+		// Destination file name.
+		outputRelativePath, _ := strings.CutSuffix(page.Path, ".pagine")
+		outputAbsolutePath := s.Root.PathOf(filepath.Join(dest, outputRelativePath))
 
-		err = os.MkdirAll(filepath.Dir(absolutePath), os.ModePerm)
+		// Create dest file.
+
+		_, err := os.Stat(filepath.Dir(outputAbsolutePath))
+		switch {
+		case os.IsNotExist(err):
+			err = os.MkdirAll(filepath.Dir(outputAbsolutePath), os.ModePerm)
+			if err != nil {
+				return err
+			}
+		case err == nil:
+			return err
+		}
+
+		outputFile, err := os.Create(outputAbsolutePath)
 		if err != nil {
 			return err
 		}
 
-		outputFile, err := os.Create(absolutePath)
-		if err != nil {
-			return err
-		}
+		// Generate in parallel.
+		wg.Add(1)
+		go func() {
+			defer outputFile.Close()
+			defer wg.Done()
+			err := page.Generate(outputFile)
+			if err != nil {
+				errs <- err
+			}
+		}()
+	}
 
-		err = page.Generate(outputFile)
-		if err != nil {
-			return err
+	wg.Wait()
+
+	close(errs)
+
+	var errSet util.ErrorSet
+
+	for {
+		err, ok := <-errs
+		if !ok {
+			break
 		}
+		errSet.Errors = append(errSet.Errors, err)
+	}
+
+	if errSet.Errors != nil {
+		return &errSet
 	}
 
 	return nil

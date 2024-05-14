@@ -2,18 +2,19 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0
 // that can be found in the LICENSE file and https://mozilla.org/MPL/2.0/.
 
-package util
+package path
 
 import (
-	"github.com/BurntSushi/toml"
-	"os"
+	"testing"
 )
 
-func UnmarshalTOMLFile(path string, v any) error {
-	b, err := os.ReadFile(path)
+func TestPath_IterateAsRelative(t *testing.T) {
+	paths, err := (&Path{"/etc"}).IterateAsRelative()
 	if err != nil {
-		return err
+		t.Fatal(err)
 	}
 
-	return toml.Unmarshal(b, v)
+	for _, path := range paths {
+		println(path)
+	}
 }
