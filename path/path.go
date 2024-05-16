@@ -12,4 +12,4 @@ type Path struct {
 
 func NewPath(path string) Path { return Path{Path: path} }
 
-func (p *Path) PathOf(path string) string { return filepath.Join(p.Path, path) }
+func (p *Path) AbsolutePathOf(path string) string { return filepath.Join(p.Path, path) }

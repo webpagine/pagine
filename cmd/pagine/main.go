@@ -9,7 +9,7 @@ import (
 	"flag"
 	"fmt"
 	. "github.com/webpagine/go-pagine/path"
-	. "github.com/webpagine/go-pagine/site"
+	. "github.com/webpagine/go-pagine/structure"
 	"github.com/webpagine/go-pagine/util"
 	"os"
 	"path/filepath"
@@ -44,7 +44,12 @@ func _main() error {
 		Root: NewPath(*siteRoot),
 	}
 
-	err := util.UnmarshalTOMLFile(site.Root.PathOf("/pagine.toml"), &site)
+	err := site.Init()
+	if err != nil {
+		return err
+	}
+
+	err = util.UnmarshalTOMLFile(site.Root.AbsolutePathOf("/pagine.toml"), &site)
 	if err != nil {
 		return err
 	}
@@ -54,9 +59,30 @@ func _main() error {
 	}
 
 	if *doGenerate {
-		err = site.GenerateAll(*publicDir)
+		report, err := site.GenerateAll(*publicDir)
 		if err != nil {
 			return err
+		}
+
+		if report.FileSystemErrors.RawMap != nil {
+			fmt.Println("File system errors:")
+			for _, err := range report.FileSystemErrors.RawMap {
+				fmt.Print("\t", err, "\n")
+			}
+		}
+
+		if report.PageUnmarshalErrors.RawMap != nil {
+			fmt.Println("Page unmarshal errors:")
+			for _, err := range report.PageUnmarshalErrors.RawMap {
+				fmt.Print("\t", err, "\n")
+			}
+		}
+
+		if report.PageGenerationErrors.RawMap != nil {
+			fmt.Println("Page generation errors:")
+			for _, err := range report.PageGenerationErrors.RawMap {
+				fmt.Print("\t", err, "\n")
+			}
 		}
 	}
 

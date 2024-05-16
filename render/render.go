@@ -4,9 +4,20 @@
 
 package render
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
-type Renderer func(r io.Reader, w io.Writer) error
+type NoRendererFoundError struct {
+	Path string
+}
+
+func (e *NoRendererFoundError) Error() string {
+	return fmt.Sprint("no renderer found for the content type: ", e.Path)
+}
+
+type Renderer func(r io.Reader) ([]byte, error)
 
 // Renderers
 // Register renderers in independent packages by init()

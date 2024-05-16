@@ -7,7 +7,24 @@ package util
 import (
 	"io"
 	"os"
+	"path/filepath"
 )
+
+func CreateFile(path string) (*os.File, error) {
+	_, err := os.Stat(filepath.Dir(path))
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(filepath.Dir(path), os.ModePerm)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+
+	return os.Create(path)
+}
 
 func CopyFile(source string, dest string) error {
 	sourceFile, err := os.Open(source)
@@ -16,7 +33,7 @@ func CopyFile(source string, dest string) error {
 	}
 	defer sourceFile.Close()
 
-	destFile, err := os.Create(dest)
+	destFile, err := CreateFile(dest)
 	if err != nil {
 		return err
 	}

@@ -20,13 +20,12 @@ $ pagine --gen
 
 For example: `/pagine.toml`
 ```toml
-# TO BE PLANNED.
-# Just leave it blank. It doesn't matter.
+ignore = [ "*.toml", "\.*" ]
 ```
 
 ### Template
 
-Current version of Pagine depends on Go `html/template` library.
+Current version of Pagine depends on Go `text/template` library.
 
 For Go templates, refer to the [tutorial](https://gohugo.io/templates/introduction/) by Hugo team.
 
