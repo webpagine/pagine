@@ -106,7 +106,7 @@ func (s *Site) GenerateAll(dest string) (report *SiteGenerationReport, _ error) 
 
 		// Destination file name.
 		outputRelativePath, _ := strings.CutSuffix(page.RelativePath, ".pagine")
-		outputAbsolutePath := s.Root.AbsolutePathOf(filepath.Join(dest, outputRelativePath))
+		outputAbsolutePath := filepath.Join(dest, outputRelativePath)
 
 		// Create dest file.
 
