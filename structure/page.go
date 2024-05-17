@@ -6,7 +6,6 @@ package structure
 
 import (
 	. "github.com/webpagine/go-pagine/path"
-	"github.com/webpagine/go-pagine/util"
 	"io"
 	"os"
 	"text/template"
@@ -30,7 +29,7 @@ type Page struct {
 	Contents map[string]string `toml:"content"`
 
 	// Customized data.
-	DataPath string `toml:"data"`
+	Data map[string]any `toml:"data"`
 }
 
 func (p *Page) Generate(root Path, w io.Writer) error {
@@ -48,14 +47,6 @@ func (p *Page) Generate(root Path, w io.Writer) error {
 
 	var contentMap = map[string]any{}
 
-	// If the page has customized data (encoding in TOML), then add the data it contains.
-	if p.DataPath != "" {
-		err = util.UnmarshalTOMLFile(root.AbsolutePathOf(p.DataPath), contentMap)
-		if err != nil {
-			return err
-		}
-	}
-
 	for contentKey, contentRelativePath := range p.Contents {
 		contentAbsolutePath := root.AbsolutePathOf(contentRelativePath)
 
@@ -66,6 +57,10 @@ func (p *Page) Generate(root Path, w io.Writer) error {
 		}
 
 		contentMap[contentKey] = string(result)
+	}
+
+	for dataKey, dataValue := range p.Data {
+		contentMap[dataKey] = dataValue
 	}
 
 	// Template

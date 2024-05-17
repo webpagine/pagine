@@ -16,11 +16,15 @@ import (
 )
 
 var (
-	wd, _      = os.Getwd()
-	doGenerate = flag.Bool("gen", false, "GenerateAll site.")
-	doServe    = flag.Bool("serve", false, "Serve as HTTP.")
-	siteRoot   = flag.String("root", wd, "Site root.")
-	publicDir  = flag.String("public", "../"+filepath.Base(wd)+".public", "Location of generated site.")
+	wd, _ = os.Getwd()
+
+	optGenerate = flag.Bool("gen", false, "GenerateAll site.")
+	optServe    = flag.Bool("serve", false, "Serve as HTTP.")
+
+	siteRoot  = flag.String("root", wd, "Site root.")
+	publicDir = flag.String("public", "/tmp/"+filepath.Base(wd)+".public", "Location of generated site.")
+
+	addr = flag.String("listen", ":8080", "Listen address.")
 )
 
 func main() {
@@ -40,7 +44,7 @@ func _main() error {
 		return errors.New("site root is required")
 	}
 
-	var site = Site{
+	var site = &Site{
 		Root: NewPath(*siteRoot),
 	}
 
@@ -54,36 +58,43 @@ func _main() error {
 		return err
 	}
 
-	if *doServe {
-		// TODO
-	}
-
-	if *doGenerate {
-		report, err := site.GenerateAll(*publicDir)
+	if *optGenerate {
+		err := doGenerate(site)
 		if err != nil {
 			return err
 		}
+	}
 
-		if report.FileSystemErrors.RawMap != nil {
-			fmt.Println("File system errors:")
-			for _, err := range report.FileSystemErrors.RawMap {
-				fmt.Print("\t", err, "\n")
-			}
+	if *optServe {
+		err := doServe(site)
+		if err != nil {
+			return err
 		}
+	}
 
-		if report.PageUnmarshalErrors.RawMap != nil {
-			fmt.Println("Page unmarshal errors:")
-			for _, err := range report.PageUnmarshalErrors.RawMap {
-				fmt.Print("\t", err, "\n")
-			}
-		}
+	return nil
+}
 
-		if report.PageGenerationErrors.RawMap != nil {
-			fmt.Println("Page generation errors:")
-			for _, err := range report.PageGenerationErrors.RawMap {
-				fmt.Print("\t", err, "\n")
-			}
-		}
+func doGenerate(site *Site) error {
+	report, err := site.GenerateAll(*publicDir)
+	if err != nil {
+		return err
+	}
+
+	PrintReport(report)
+
+	return nil
+}
+
+func doServe(site *Site) error {
+	err := doGenerate(site)
+	if err != nil {
+		return err
+	}
+
+	err = Serve(*addr, site, *publicDir)
+	if err != nil {
+		return err
 	}
 
 	return nil
