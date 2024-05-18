@@ -11,7 +11,29 @@ $ go install github.com/webpagine/go-pagine/cmd/pagine
 $ pagine --gen
 ```
 
+Serve as HTTP server and automatically generate when files change:
+
+```shell
+$ pagine --serve --listen :8080 --public /tmp/public
+```
+
+> [!NOTE]
+> Incremental generation is not implemented yet.<br/>
+> Set the `--public` under `/tmp/` is recommended to reduce hard disk writes.
+
 ## Get Started
+
+Example structure:
+```
+.
+├── pagine.toml
+├── contents/
+│   └── my_first_post.md
+├── posts/
+│   └── my_first_post.html.pagine
+└── templates/
+    └── post.html
+```
 
 ### Site
 
@@ -20,12 +42,12 @@ $ pagine --gen
 
 For example: `/pagine.toml`
 ```toml
-ignore = [ "*.toml", "\.*" ]
+ignore = [  "/\\.*", "/*toml", "/*pagine", "/contents/*", "/templates/*" ]
 ```
 
 ### Template
 
-Current version of Pagine depends on Go `text/template` library.
+Current implementation of template depends on Go `text/template` library.
 
 For Go templates, refer to the [tutorial](https://gohugo.io/templates/introduction/) by Hugo team.
 
@@ -49,10 +71,27 @@ Page is a set of attributions of single page.
 - Customized data used in template.
 - Defines contents at different parts in template.
 
-For example: `/posts/post.html.pagine`
+For example: `/posts/my_first_post.html.pagine`
 ```toml
 template = "/templates/post.html"
+
+[content]
+content = "/contents/my_first_post.md"
+
+[data]
+lang = "en"
+title = "My First Post"
 ```
+
+`[content]` Content sources to be rendered to HTML.
+
+- The key defines the name used in template such as `{{ $.content }}`.
+- The value refers to the path of content source.
+
+`[data]` Customized values.
+
+- The key defines the name used in template such as `{{ $.title }}`.
+- The value is the value. It remains AS IS.
 
 ### Content
 
@@ -61,9 +100,9 @@ For each supported rich text format, there is a parser and an HTML generator. Pa
 The latest implementation accepts:
 - Markdown
 
-For example: `/posts/post.md`
+For example: `/contents/my_first_post.md`
 ```markdown
-# Post
+# My First Post
 
 It is a post in Markdown.
 ```

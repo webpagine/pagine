@@ -5,10 +5,8 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
-	. "github.com/webpagine/go-pagine/path"
 	. "github.com/webpagine/go-pagine/structure"
 	"github.com/webpagine/go-pagine/util"
 	"os"
@@ -21,10 +19,10 @@ var (
 	optGenerate = flag.Bool("gen", false, "GenerateAll site.")
 	optServe    = flag.Bool("serve", false, "Serve as HTTP.")
 
-	siteRoot  = flag.String("root", wd, "Site root.")
-	publicDir = flag.String("public", "/tmp/"+filepath.Base(wd)+".public", "Location of generated site.")
+	optSiteRoot  = flag.String("root", wd, "Site root.")
+	optPublicDir = flag.String("public", "/tmp/"+filepath.Base(wd)+".public", "Location of generated site.")
 
-	addr = flag.String("listen", ":8080", "Listen address.")
+	optAddr = flag.String("listen", ":8080", "Listen address.")
 )
 
 func main() {
@@ -40,20 +38,14 @@ func main() {
 
 func _main() error {
 
-	if *siteRoot == "" {
-		return errors.New("site root is required")
-	}
+	var siteConfig SiteConfig
 
-	var site = &Site{
-		Root: NewPath(*siteRoot),
-	}
-
-	err := site.Init()
+	err := util.UnmarshalTOMLFile(filepath.Join(*optSiteRoot, "/pagine.toml"), &siteConfig)
 	if err != nil {
 		return err
 	}
 
-	err = util.UnmarshalTOMLFile(site.Root.AbsolutePathOf("/pagine.toml"), &site)
+	site, err := NewSite(*optSiteRoot, &siteConfig)
 	if err != nil {
 		return err
 	}
@@ -76,7 +68,7 @@ func _main() error {
 }
 
 func doGenerate(site *Site) error {
-	report, err := site.GenerateAll(*publicDir)
+	report, err := site.GenerateAll(*optPublicDir)
 	if err != nil {
 		return err
 	}
@@ -87,12 +79,7 @@ func doGenerate(site *Site) error {
 }
 
 func doServe(site *Site) error {
-	err := doGenerate(site)
-	if err != nil {
-		return err
-	}
-
-	err = Serve(*addr, site, *publicDir)
+	err := Serve(*optAddr, site, *optPublicDir)
 	if err != nil {
 		return err
 	}

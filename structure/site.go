@@ -20,21 +20,26 @@ type SiteGenerationReport struct {
 	PageGenerationErrors SyncMap[string, error]
 }
 
-type Site struct {
-	Root             Path
-	IgnoreRegExprRaw []string `toml:"ignore"`
-	IgnoreRegExpr    []regexp.Regexp
+type SiteConfig struct {
+	Ignore []string `toml:"ignore"`
 }
 
-func (s *Site) Init() error {
-	for _, regExpr := range s.IgnoreRegExprRaw {
-		regExp, err := regexp.Compile(regExpr)
-		if err == nil {
-			return err
+type Site struct {
+	Root          Path
+	IgnoreRegExpr []*regexp.Regexp
+}
+
+func NewSite(root string, config *SiteConfig) (*Site, error) {
+	s := &Site{Root: NewPath(root)}
+
+	for _, regExprRaw := range config.Ignore {
+		regExpr, err := regexp.Compile(regExprRaw)
+		if err != nil {
+			return nil, err
 		}
-		s.IgnoreRegExpr = append(s.IgnoreRegExpr, *regExp)
+		s.IgnoreRegExpr = append(s.IgnoreRegExpr, regExpr)
 	}
-	return nil
+	return s, nil
 }
 
 func (s *Site) GenerateAll(dest string) (report *SiteGenerationReport, _ error) {
@@ -55,7 +60,7 @@ func (s *Site) GenerateAll(dest string) (report *SiteGenerationReport, _ error) 
 	for _, relativePath := range relativePathList {
 		for _, ignore := range s.IgnoreRegExpr {
 			if ignore.MatchString(relativePath) {
-				continue
+				goto IGNORE
 			}
 		}
 
@@ -64,6 +69,8 @@ func (s *Site) GenerateAll(dest string) (report *SiteGenerationReport, _ error) 
 		} else {
 			staticRelativePaths = append(staticRelativePaths, relativePath)
 		}
+
+	IGNORE:
 	}
 
 	// Generate pages.

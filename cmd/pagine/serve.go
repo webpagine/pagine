@@ -38,6 +38,24 @@ func Serve(addr string, site *Site, publicDir string) error {
 
 	// Handle file changes.
 	go func() {
+		gen := func() {
+			err := func() error {
+				report, err := site.GenerateAll(publicDir)
+				if err != nil {
+					return err
+				}
+
+				PrintReport(report)
+
+				return nil
+			}()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			}
+			fmt.Println("\tFull generation executed.")
+		}
+		gen()
+
 		for {
 			select {
 			case <-watcher.Events:
@@ -47,23 +65,7 @@ func Serve(addr string, site *Site, publicDir string) error {
 
 				log.Println("Detected file change")
 
-				err := func() error {
-
-					report, err := site.GenerateAll(publicDir)
-					if err != nil {
-						return err
-					}
-
-					PrintReport(report)
-
-					return nil
-				}()
-				if err != nil {
-					fmt.Fprintln(os.Stderr, err)
-					continue
-				}
-
-				fmt.Println("\tFull generation executed.")
+				gen()
 			case <-done:
 				return
 			}
