@@ -5,9 +5,10 @@
 package structure
 
 import (
+	"bytes"
 	. "github.com/webpagine/go-pagine/path"
 	"io"
-	"os"
+	"path/filepath"
 	"text/template"
 )
 
@@ -18,32 +19,21 @@ type Page struct {
 	// RelativePath where the webpage attr file is.
 	RelativePath string
 
-	// TemplatePath the pages uses.
-	TemplatePath string `toml:"template"`
+	// Templates the pages uses.
+	Templates map[string]string `toml:"templates"`
 
 	// Contents sources: content.[string] = string
 	// It is designed for different part of content used in template.
 	//
 	// Example:
 	// content = "/content_000.md" => invoke "md" generator, assign the output to the key "content"
-	Contents map[string]string `toml:"content"`
+	Contents map[string]string `toml:"contents"`
 
 	// Customized data.
 	Data map[string]any `toml:"data"`
 }
 
 func (p *Page) Generate(root Path, w io.Writer) error {
-
-	// Parse Go template.
-	templateBody, err := os.ReadFile(root.AbsolutePathOf(p.TemplatePath))
-	if err != nil {
-		return err
-	}
-
-	t, err := template.New(p.RelativePath).Parse(string(templateBody))
-	if err != nil {
-		return err
-	}
 
 	var contentMap = map[string]any{}
 
@@ -63,8 +53,29 @@ func (p *Page) Generate(root Path, w io.Writer) error {
 		contentMap[dataKey] = dataValue
 	}
 
-	// Template
-	err = t.Execute(w, contentMap) // No
+	var templateMap = map[string]string{}
+
+	contentMap["templates"] = templateMap
+
+	for templateKey, templateRelativePath := range p.Templates {
+		path := root.AbsolutePathOf(templateRelativePath)
+
+		t, err := template.New(filepath.Base(path)).ParseFiles(path)
+		if err != nil {
+			return err
+		}
+
+		b := bytes.NewBuffer(nil)
+
+		err = t.Execute(b, contentMap)
+		if err != nil {
+			return err
+		}
+
+		templateMap[templateKey] = b.String()
+	}
+
+	_, err := w.Write([]byte(templateMap["main"]))
 	if err != nil {
 		return err
 	}
