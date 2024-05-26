@@ -52,7 +52,7 @@ func Serve(addr string, site *Site, publicDir string) error {
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 			}
-			fmt.Println("\tFull generation executed.")
+			fmt.Println("Executed full generation.")
 		}
 		gen()
 
@@ -63,7 +63,7 @@ func Serve(addr string, site *Site, publicDir string) error {
 
 				// Full generation.
 
-				log.Println("Detected file change")
+				log.Println("Detected file change.")
 
 				gen()
 			case <-done:

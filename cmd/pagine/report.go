@@ -12,22 +12,22 @@ import (
 func PrintReport(report *structure.SiteGenerationReport) {
 	if report.FileSystemErrors.RawMap != nil {
 		fmt.Println("File system errors:")
-		for _, err := range report.FileSystemErrors.RawMap {
-			fmt.Print("\t", err, "\n")
+		for path, err := range report.FileSystemErrors.RawMap {
+			fmt.Print("\t[", path, "]\t", err, "\n")
 		}
 	}
 
 	if report.PageUnmarshalErrors.RawMap != nil {
 		fmt.Println("Page unmarshal errors:")
-		for _, err := range report.PageUnmarshalErrors.RawMap {
-			fmt.Print("\t", err, "\n")
+		for path, err := range report.PageUnmarshalErrors.RawMap {
+			fmt.Print("\t[", path, "]\t", err, "\n")
 		}
 	}
 
 	if report.PageGenerationErrors.RawMap != nil {
 		fmt.Println("Page generation errors:")
-		for _, err := range report.PageGenerationErrors.RawMap {
-			fmt.Print("\t", err, "\n")
+		for path, err := range report.PageGenerationErrors.RawMap {
+			fmt.Print("\t[", path, "]\t", err, "\n")
 		}
 	}
 }

@@ -2,7 +2,17 @@
 <img src="https://github.com/jellyterra/artworks/raw/master/logo/pagine.svg" width="410.4" height="140" alt="Pagine logo" />
 
 # Pagine
-Static web page generator for blogs and showcases.
+Template-driven generator for building websites of any scale.
+
+Latest version: v1.0.0
+
+- Template.
+- Separation of **content**, **template** and **page form**.
+
+### Planned features
+
+- Job pipeline for reducing redundant content generation.
+- Directories as collections of web pages.
 
 ## Install
 
@@ -29,9 +39,14 @@ Example structure:
 ├── pagine.toml
 ├── contents/
 │   └── my_first_post.md
+├── data/
+│   ├── header_all.toml
+│   └── header_specific.toml
 ├── posts/
 │   └── my_first_post.html.pagine
 └── templates/
+    ├── header.html
+    ├── footer.html
     └── post.html
 ```
 
@@ -42,7 +57,7 @@ Example structure:
 
 For example: `/pagine.toml`
 ```toml
-ignore = [  "/\\.*", "/*toml", "/*pagine", "/contents/*", "/templates/*" ]
+ignore = [  "/\\.*", "/*toml", "/contents/*", "/templates/*" ]
 ```
 
 ### Template
@@ -53,12 +68,13 @@ For Go templates, refer to the [tutorial](https://gohugo.io/templates/introducti
 
 For example: `/templates/post.html`
 ```html
-<html lang="{{ $.lang }}">
+<html lang="{{ .data.lang }}">
 <head>
-    <title>{{ $.title }}</title>
+    <title>{{ .data.title }}</title>
 </head>
 <body>
-<p>{{ $.content }}</p>
+<p>{{ .contents.my_first_post }}</p>
+<p>{{ .data.time }}</p>
 </body>
 </html>
 ```
@@ -67,31 +83,41 @@ For example: `/templates/post.html`
 
 Page is a set of attributions of single page.
 
-- Template to use.
-- Customized data used in template.
-- Defines contents at different parts in template.
+- Templates to be used.
+- Data definitions to be used in template.
+- Different contents to be used in template.
 
 For example: `/posts/my_first_post.html.pagine`
 ```toml
-template = "/templates/post.html"
+# Templates to be used in this page.
+[templates]
+header = "/templates/header.html"
+footer = "/templates/footer.html"
 
-[content]
-content = "/contents/my_first_post.md"
+# Main template (top-level) is required.
+main   = "/templates/post.html"
 
-[data]
-lang = "en"
+# Include data definitions from extern TOMLs.
+[include]
+header = [
+    "/data/header_all.toml",
+    "/data/header_specific.toml",
+]
+
+# Contents to be parsed and generated to HTML.
+[contents]
+my_first_post = "/contents/my_first_post.md"
+
+# Define data for template "main".
+[define.main]
+lang  = "en"
 title = "My First Post"
+time  = 2024-05-01
+
+# Define data for template "header".
+[define.header]
+logo = "/assets/img/logo.svg"
 ```
-
-`[content]` Content sources to be rendered to HTML.
-
-- The key defines the name used in template such as `{{ $.content }}`.
-- The value refers to the path of content source.
-
-`[data]` Customized values.
-
-- The key defines the name used in template such as `{{ $.title }}`.
-- The value is the value. It remains AS IS.
 
 ### Content
 
@@ -107,17 +133,19 @@ For example: `/contents/my_first_post.md`
 It is a post in Markdown.
 ```
 
-## Deploy
+## Deploy manually
 
 ```shell
-$ pagine --gen
+$ pagine --gen --public ../public
 ```
 
-Currently:
-- Relative CI/CD is not implemented.
-- The only approach to deploy is to upload entire generated site to the server.
+## Deploy via CI/CD
 
-## FAQ
+### GitHub Actions
+
+GitHub Actions workflow configuration can be found in [Get Started](https://github.com/webpagine/get-started) repository.
+
+# FAQ
 
 ### Why another generator? Isn't Hugo enough?
 
@@ -137,7 +165,9 @@ So, **it depends**.
 
 ### Co-operate with external tools such as npx?
 
-It is planned but not implemented in the latest version.
+It is possible. This step should be transparent to external tools.
+
+Run `npx` in *public* directory after the generation by Pagine.
 
 ### What is the origin of the logo and name?
 

@@ -6,7 +6,9 @@ package structure
 
 import (
 	"bytes"
+	"github.com/webpagine/go-pagine/collection"
 	. "github.com/webpagine/go-pagine/path"
+	"github.com/webpagine/go-pagine/util"
 	"io"
 	"path/filepath"
 	"text/template"
@@ -19,6 +21,9 @@ type Page struct {
 	// RelativePath where the webpage attr file is.
 	RelativePath string
 
+	// Include data from extern.
+	Include map[string][]string `toml:"include"`
+
 	// Templates the pages uses.
 	Templates map[string]string `toml:"templates"`
 
@@ -30,12 +35,21 @@ type Page struct {
 	Contents map[string]string `toml:"contents"`
 
 	// Customized data.
-	Data map[string]any `toml:"data"`
+	Define map[string]map[string]any `toml:"define"`
 }
 
 func (p *Page) Generate(root Path, w io.Writer) error {
 
-	var contentMap = map[string]any{}
+	mainTemplateRelativePath, ok := p.Templates["main"]
+	if !ok {
+		return &MissingRequiredFieldError{Field: "templates.main"}
+	}
+
+	var (
+		templateMap = map[string]string{}
+		contentMap  = map[string]any{}
+		dataMap     = map[string]map[string]any{}
+	)
 
 	for contentKey, contentRelativePath := range p.Contents {
 		contentAbsolutePath := root.AbsolutePathOf(contentRelativePath)
@@ -49,15 +63,29 @@ func (p *Page) Generate(root Path, w io.Writer) error {
 		contentMap[contentKey] = string(result)
 	}
 
-	for dataKey, dataValue := range p.Data {
-		contentMap[dataKey] = dataValue
+	for templateKey := range p.Templates {
+		dataMap[templateKey] = map[string]any{}
 	}
 
-	var templateMap = map[string]string{}
+	for templateKey, list := range p.Include {
+		for _, includeRelativePath := range list {
+			m := map[string]any{}
+			err := util.UnmarshalTOMLFile(root.AbsolutePathOf(includeRelativePath), &m)
+			if err != nil {
+				return err
+			}
+			collection.MergeRawMap(dataMap[templateKey], m)
+		}
+	}
 
-	contentMap["templates"] = templateMap
+	for templateKey, defMap := range p.Define {
+		m := dataMap[templateKey]
+		for defKey, defValue := range defMap {
+			m[defKey] = defValue
+		}
+	}
 
-	for templateKey, templateRelativePath := range p.Templates {
+	gen := func(templateKey, templateRelativePath string) error {
 		path := root.AbsolutePathOf(templateRelativePath)
 
 		t, err := template.New(filepath.Base(path)).ParseFiles(path)
@@ -67,15 +95,35 @@ func (p *Page) Generate(root Path, w io.Writer) error {
 
 		b := bytes.NewBuffer(nil)
 
-		err = t.Execute(b, contentMap)
+		err = t.Execute(b, map[string]any{
+			"contents":  contentMap,
+			"templates": templateMap,
+			"data":      dataMap[templateKey],
+		})
 		if err != nil {
 			return err
 		}
 
 		templateMap[templateKey] = b.String()
+
+		return nil
 	}
 
-	_, err := w.Write([]byte(templateMap["main"]))
+	delete(p.Templates, "main")
+
+	for templateKey, templateRelativePath := range p.Templates {
+		err := gen(templateKey, templateRelativePath)
+		if err != nil {
+			return err
+		}
+	}
+
+	err := gen("main", mainTemplateRelativePath)
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Write([]byte(templateMap["main"]))
 	if err != nil {
 		return err
 	}

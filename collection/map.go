@@ -6,6 +6,12 @@ package collection
 
 import "sync"
 
+func MergeRawMap[K comparable, V any](set map[K]V, subset map[K]V) {
+	for k, v := range subset {
+		set[k] = v
+	}
+}
+
 type Map[K comparable, V any] struct {
 	RawMap map[K]V
 }
