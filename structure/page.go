@@ -88,7 +88,7 @@ func (p *Page) Generate(root Path, w io.Writer) error {
 	gen := func(templateKey, templateRelativePath string) error {
 		path := root.AbsolutePathOf(templateRelativePath)
 
-		t, err := template.New(filepath.Base(path)).ParseFiles(path)
+		t, err := template.New(filepath.Base(path)).Funcs(builtinFuncMap).ParseFiles(path)
 		if err != nil {
 			return err
 		}
