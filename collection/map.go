@@ -6,6 +6,16 @@ package collection
 
 import "sync"
 
+func ValuesOfRawMap[K comparable, V any](m map[K]V) []V {
+	values := make([]V, len(m))
+	i := 0
+	for _, v := range m {
+		values[i] = v
+		i++
+	}
+	return values
+}
+
 func MergeRawMap[K comparable, V any](set map[K]V, subset map[K]V) {
 	for k, v := range subset {
 		set[k] = v
