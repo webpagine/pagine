@@ -1,4 +1,4 @@
-module github.com/webpagine/go-pagine
+module github.com/webpagine/pagine
 
 go 1.22
 
