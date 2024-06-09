@@ -6,7 +6,7 @@ package util
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/webpagine/go-pagine/vfs"
+	"github.com/webpagine/pagine/vfs"
 )
 
 func UnmarshalTOMLFile(root vfs.DirFS, path string, v any) error {

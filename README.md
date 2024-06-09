@@ -17,7 +17,7 @@ Latest version: v1.0.0
 ## Install
 
 ```shell
-$ go install github.com/webpagine/go-pagine/cmd/pagine
+$ go install github.com/webpagine/pagine/cmd/pagine
 $ pagine --gen
 ```
 

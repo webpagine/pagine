@@ -1,9 +1,9 @@
 package structure
 
 import (
-	"github.com/webpagine/go-pagine/collection"
-	"github.com/webpagine/go-pagine/util"
-	"github.com/webpagine/go-pagine/vfs"
+	"github.com/webpagine/pagine/collection"
+	"github.com/webpagine/pagine/util"
+	"github.com/webpagine/pagine/vfs"
 	"maps"
 	"os"
 	"sync"

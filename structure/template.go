@@ -1,8 +1,8 @@
 package structure
 
 import (
-	"github.com/webpagine/go-pagine/util"
-	"github.com/webpagine/go-pagine/vfs"
+	"github.com/webpagine/pagine/util"
+	"github.com/webpagine/pagine/vfs"
 	"io"
 	"text/template"
 )

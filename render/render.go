@@ -5,7 +5,7 @@
 package render
 
 import (
-	"github.com/webpagine/go-pagine/vfs"
+	"github.com/webpagine/pagine/vfs"
 	"io"
 )
 

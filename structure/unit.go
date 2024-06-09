@@ -2,9 +2,9 @@ package structure
 
 import (
 	"fmt"
-	"github.com/webpagine/go-pagine/collection"
-	"github.com/webpagine/go-pagine/render"
-	"github.com/webpagine/go-pagine/vfs"
+	"github.com/webpagine/pagine/collection"
+	"github.com/webpagine/pagine/render"
+	"github.com/webpagine/pagine/vfs"
 	"maps"
 	"path/filepath"
 	"strings"
