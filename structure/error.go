@@ -6,10 +6,19 @@ package structure
 
 import "fmt"
 
-type MissingRequiredFieldError struct {
-	Field string
+type TemplateNotFoundError struct {
+	Template *Template
+	Want     string
 }
 
-func (e *MissingRequiredFieldError) Error() string {
-	return fmt.Sprint("missing required field: ", e.Field)
+func (e *TemplateNotFoundError) Error() string {
+	return fmt.Sprint("template not found in [", e.Template.CanonicalName, "]: ", e.Want)
+}
+
+type TemplateUndefinedError struct {
+	Name string
+}
+
+func (e *TemplateUndefinedError) Error() string {
+	return fmt.Sprint("template undefined: ", e.Name)
 }

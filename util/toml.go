@@ -6,11 +6,11 @@ package util
 
 import (
 	"github.com/BurntSushi/toml"
-	"os"
+	"github.com/webpagine/go-pagine/vfs"
 )
 
-func UnmarshalTOMLFile(path string, v any) error {
-	b, err := os.ReadFile(path)
+func UnmarshalTOMLFile(root vfs.DirFS, path string, v any) error {
+	b, err := root.ReadFile(path)
 	if err != nil {
 		return err
 	}

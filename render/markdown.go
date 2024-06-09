@@ -8,21 +8,17 @@ import (
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
-	"io"
 )
 
+func Markdown(content []byte) (string, error) {
+
+	doc := parser.NewWithExtensions(parser.CommonExtensions | parser.MathJax | parser.NoEmptyLineBeforeBlock).Parse(content)
+
+	renderer := html.NewRenderer(html.RendererOptions{Flags: html.CommonFlags | html.HrefTargetBlank})
+
+	return string(markdown.Render(doc, renderer)), nil
+}
+
 func init() {
-	Renderers[".md"] = func(r io.Reader) ([]byte, error) {
-
-		b, err := io.ReadAll(r)
-		if err != nil {
-			return nil, err
-		}
-
-		doc := parser.NewWithExtensions(parser.CommonExtensions | parser.MathJax | parser.NoEmptyLineBeforeBlock).Parse(b)
-
-		renderer := html.NewRenderer(html.RendererOptions{Flags: html.CommonFlags | html.HrefTargetBlank})
-
-		return markdown.Render(doc, renderer), nil
-	}
+	Renderers[".md"] = Markdown
 }

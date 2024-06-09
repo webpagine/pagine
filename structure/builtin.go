@@ -30,9 +30,3 @@ func mapAsSlice(m map[string]any, keyName, valueName string) []any {
 	}
 	return slice
 }
-
-var builtinFuncMap = map[string]any{
-	"add":            add,
-	"divideSliceByN": divideSliceByN,
-	"mapAsSlice":     mapAsSlice,
-}

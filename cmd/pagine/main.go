@@ -7,26 +7,27 @@ package main
 import (
 	"flag"
 	"fmt"
-	. "github.com/webpagine/go-pagine/structure"
-	"github.com/webpagine/go-pagine/util"
+	"github.com/fsnotify/fsnotify"
+	"github.com/webpagine/go-pagine/structure"
+	"github.com/webpagine/go-pagine/vfs"
+	"io"
+	"io/fs"
+	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 var (
 	wd, _ = os.Getwd()
 
-	optGenerate = flag.Bool("gen", false, "GenerateAll site.")
-	optServe    = flag.Bool("serve", false, "Serve as HTTP.")
+	optRootDir   = flag.String("root", wd, "Site root.")
+	optPublicDir = flag.String("public", "/tmp/"+filepath.Base(wd)+".public", "Location of public directory.")
 
-	optSiteRoot  = flag.String("root", wd, "Site root.")
-	optPublicDir = flag.String("public", "/tmp/"+filepath.Base(wd)+".public", "Location of generated site.")
-
-	optAddr = flag.String("listen", ":8080", "Listen address.")
+	optAddr = flag.String("serve", "", "Listen and serve as HTTP.")
 )
 
 func main() {
-
 	flag.Parse()
 
 	err := _main()
@@ -37,28 +38,16 @@ func main() {
 }
 
 func _main() error {
+	root := vfs.OsDirFS(*optRootDir)
+	dest := vfs.OsDirFS(*optPublicDir)
 
-	var siteConfig SiteConfig
-
-	err := util.UnmarshalTOMLFile(filepath.Join(*optSiteRoot, "/pagine.toml"), &siteConfig)
+	err := generateAll(root, dest)
 	if err != nil {
 		return err
 	}
 
-	site, err := NewSite(*optSiteRoot, &siteConfig)
-	if err != nil {
-		return err
-	}
-
-	if *optGenerate {
-		err := doGenerate(site)
-		if err != nil {
-			return err
-		}
-	}
-
-	if *optServe {
-		err := doServe(site)
+	if *optAddr != "" {
+		err = serve(root, dest)
 		if err != nil {
 			return err
 		}
@@ -67,22 +56,95 @@ func _main() error {
 	return nil
 }
 
-func doGenerate(site *Site) error {
-	report, err := site.GenerateAll(*optPublicDir)
+func generateAll(root, dest vfs.DirFS) error {
+	env, err := structure.LoadEnv(root)
 	if err != nil {
 		return err
 	}
 
-	PrintReport(report)
+	err = fs.WalkDir(root, "/", func(path string, entry fs.DirEntry, err error) error {
+		if err != nil || entry.IsDir() {
+			return err
+		}
+
+		src, err := root.Open(path)
+		if err != nil {
+			return err
+		}
+
+		dst, err := dest.CreateFile(path)
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(dst, src)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	level, err := structure.ExecuteLevels(env, root, dest, structure.MetadataSet{})
+	if err != nil {
+		return err
+	}
+
+	walkLevels(&level)
 
 	return nil
 }
 
-func doServe(site *Site) error {
-	err := Serve(*optAddr, site, *optPublicDir)
+func walkLevels(level *structure.Level) {
+	for _, report := range level.Reports {
+		fmt.Println("[", report.Level.Root.Path, "]", report.Err)
+	}
+
+	f := sync.OnceFunc(func() {
+		println(level.Root.Path)
+	})
+
+	for _, u := range level.Units {
+		switch {
+		case u.Report.Error != nil:
+			f()
+			fmt.Println("\t[", u.Output, "]", u.Report.Error)
+		case u.Report.TemplateErrors != nil:
+			f()
+			fmt.Println("\t[", u.Output, "] Template errors")
+			for _, e := range u.Report.TemplateErrors {
+				fmt.Println("\t\t", e)
+			}
+		default:
+		}
+	}
+
+	for _, level := range level.Levels {
+		walkLevels(&level)
+	}
+}
+
+func serve(root, dest vfs.DirFS) error {
+	w, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
 	}
 
-	return nil
+	err = w.Add(root.Path)
+	if err != nil {
+		return err
+	}
+	defer w.Close()
+
+	go func() {
+		select {
+		case e := <-w.Events:
+			fmt.Println(e.String())
+		}
+	}()
+
+	return http.ListenAndServe(*optAddr, http.FileServerFS(dest))
 }

@@ -5,20 +5,30 @@
 package render
 
 import (
-	"fmt"
+	"github.com/webpagine/go-pagine/vfs"
 	"io"
 )
 
-type NoRendererFoundError struct {
-	Path string
-}
-
-func (e *NoRendererFoundError) Error() string {
-	return fmt.Sprint("no renderer found for the content type: ", e.Path)
-}
-
-type Renderer func(r io.Reader) ([]byte, error)
+type Renderer func(content []byte) (string, error)
 
 // Renderers
 // Register renderers in independent packages by init()
 var Renderers = map[string]Renderer{}
+
+func FromFile(r Renderer, file io.Reader) (string, error) {
+	b, err := io.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+
+	return r(b)
+}
+
+func FromPath(r Renderer, root vfs.DirFS, path string) (string, error) {
+	f, err := root.Open(path)
+	if err != nil {
+		return "", err
+	}
+
+	return FromFile(r, f)
+}
