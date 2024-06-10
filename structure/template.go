@@ -9,16 +9,19 @@ import (
 
 type TemplateManifest struct {
 	Manifest struct {
-		Canonical string `toml:"canonical"`
+		Canonical string   `toml:"canonical"`
+		Patterns  []string `toml:"patterns"`
 	} `toml:"manifest"`
 
 	Templates []struct {
-		Src    string `toml:"src"`
+		Name   string `toml:"name"`
 		Export string `toml:"export"`
 	} `toml:"templates"`
 }
 
 type Template struct {
+	Root vfs.DirFS
+
 	CanonicalName string
 
 	Templates map[string]string
@@ -49,30 +52,30 @@ func LoadTemplate(root vfs.DirFS) (*Template, error) {
 		return nil, err
 	}
 
-	templateSources := make([]string, len(manifest.Templates))
-	templateExported := map[string]string{}
-
-	for i, t := range manifest.Templates {
-		templateSources[i] = t.Src
-		if t.Export != "" {
-			templateExported[t.Export] = t.Src
-		}
+	exported := map[string]string{}
+	for _, t := range manifest.Templates {
+		exported[t.Name] = t.Export
 	}
 
-	goTemplate, err := template.New(manifest.Manifest.Canonical).Funcs(emptyFuncMap).ParseFS(root, templateSources...)
+	goTemplate, err := template.New(manifest.Manifest.Canonical).Funcs(emptyFuncMap).ParseFS(root, manifest.Manifest.Patterns...)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Template{
+		Root:          root,
 		CanonicalName: manifest.Manifest.Canonical,
-		Templates:     templateExported,
+		Templates:     exported,
 		GoTemplate:    goTemplate,
 	}, nil
 }
 
 var emptyFuncMap = map[string]any{
-	"embed":          func(_ string) string { return "" },
-	"render":         func(_ string) string { return "" },
-	"renderMarkdown": func(_ string) string { return "" },
+	"attr":           _empty,
+	"embed":          _empty,
+	"render":         _empty,
+	"renderMarkdown": _empty,
+	"renderAsciidoc": _empty,
 }
+
+func _empty(_ any) any { return "" }

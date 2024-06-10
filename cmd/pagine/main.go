@@ -59,12 +59,19 @@ func _main() error {
 func generateAll(root, dest vfs.DirFS) error {
 	env, err := structure.LoadEnv(root)
 	if err != nil {
+		fmt.Println("Error occurred while loading environment from env.toml:")
 		return err
 	}
 
 	err = fs.WalkDir(root, "/", func(path string, entry fs.DirEntry, err error) error {
 		if err != nil || entry.IsDir() {
 			return err
+		}
+
+		for _, glob := range env.IgnoreGlobs {
+			if glob.MatchString(path) {
+				return nil
+			}
 		}
 
 		src, err := root.Open(path)
@@ -85,15 +92,19 @@ func generateAll(root, dest vfs.DirFS) error {
 		return nil
 	})
 	if err != nil {
+		fmt.Println("Error occurred while copying files:")
 		return err
 	}
 
 	level, err := structure.ExecuteLevels(env, root, dest, structure.MetadataSet{})
 	if err != nil {
+		fmt.Println("Error occurred while executing units:")
 		return err
 	}
 
 	walkLevels(&level)
+
+	fmt.Println("Generation complete.")
 
 	return nil
 }
@@ -141,8 +152,11 @@ func serve(root, dest vfs.DirFS) error {
 
 	go func() {
 		select {
-		case e := <-w.Events:
-			fmt.Println(e.String())
+		case <-w.Events:
+			err := generateAll(root, dest)
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 	}()
 

@@ -32,12 +32,41 @@ type Unit struct {
 func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define map[string]any) ([]error, error) {
 	var errors []error
 
+	templateName, templateKey := ParseTemplatePair(u.Template)
+
+	t, ok := env.Templates[templateName]
+	if !ok {
+		return nil, &TemplateUndefinedError{Name: templateName}
+	}
+
+	var (
+		base, _         = strings.CutPrefix(root.Path, env.Root.Path)
+		templateBase, _ = strings.CutPrefix(t.Root.Path, env.Root.Path)
+
+		attr = map[string]any{
+			"base":         base,
+			"templateBase": templateBase,
+		}
+	)
+
+	renderFromPath := func(r render.Renderer, pathStr any) string {
+		result, err := render.FromPath(render.Asciidoc, root, pathStr.(string))
+		if err != nil {
+			errors = append(errors, err)
+			return ""
+		}
+		return result
+	}
+
 	funcMap := map[string]any{
 		"add":            add,
 		"divideSliceByN": divideSliceByN,
 		"mapAsSlice":     mapAsSlice,
 
-		"embed": func(pathStr any) string {
+		"attr": func(keyStr any) any {
+			return attr[keyStr.(string)]
+		},
+		"embed": func(pathStr any) any {
 			b, err := root.ReadFile(pathStr.(string))
 			if err != nil {
 				errors = append(errors, err)
@@ -45,47 +74,29 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 			}
 			return string(b)
 		},
-		"render": func(pathStr any) string {
-			r, ok := render.Renderers[filepath.Ext(pathStr.(string))]
+		"render": func(pathStr any) any {
+			r, ok := render.Renderers[filepath.Ext(pathStr.(string))[1:]]
 			if !ok {
 				errors = append(errors, fmt.Errorf("unknown template %q", pathStr))
 				return ""
 			}
-			result, err := render.FromPath(r, root, pathStr.(string))
-			if err != nil {
-				errors = append(errors, err)
-				return ""
-			}
-			return result
+			return renderFromPath(r, pathStr)
 		},
-		"renderMarkdown": func(pathStr any) string {
-			result, err := render.FromPath(render.Markdown, root, pathStr.(string))
-			if err != nil {
-				errors = append(errors, err)
-				return ""
-			}
-			return result
-		},
+		"renderAsciidoc": func(pathStr any) any { return renderFromPath(render.Asciidoc, pathStr) },
+		"renderMarkdown": func(pathStr any) any { return renderFromPath(render.Markdown, pathStr) },
 	}
 
-	templateName, templateKey := ParseTemplatePair(u.Template)
+	f, err := dest.CreateFile(filepath.Join(base, u.Output))
+	if err != nil {
+		return nil, err
+	}
 
-	if t, ok := env.Templates[templateName]; ok {
-		cut, _ := strings.CutPrefix(root.Path, env.Root.Path)
-		f, err := dest.CreateFile(filepath.Join(cut, u.Output))
-		if err != nil {
-			return nil, err
-		}
+	dataMap := maps.Clone(data[templateName])
+	collection.MergeRawMap(dataMap, define)
 
-		dataMap := maps.Clone(data[templateName])
-		collection.MergeRawMap(dataMap, define)
-
-		err = t.ExecuteTemplate(f, funcMap, templateKey, dataMap)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		return nil, &TemplateUndefinedError{Name: templateName}
+	err = t.ExecuteTemplate(f, funcMap, templateKey, dataMap)
+	if err != nil {
+		return nil, err
 	}
 
 	return errors, nil

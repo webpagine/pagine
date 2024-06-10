@@ -12,7 +12,7 @@ import (
 
 func Markdown(content []byte) (string, error) {
 
-	doc := parser.NewWithExtensions(parser.CommonExtensions | parser.MathJax | parser.NoEmptyLineBeforeBlock).Parse(content)
+	doc := parser.NewWithExtensions(parser.CommonExtensions | parser.NoEmptyLineBeforeBlock).Parse(content)
 
 	renderer := html.NewRenderer(html.RendererOptions{Flags: html.CommonFlags | html.HrefTargetBlank})
 
@@ -20,5 +20,5 @@ func Markdown(content []byte) (string, error) {
 }
 
 func init() {
-	Renderers[".md"] = Markdown
+	Renderers["md"] = Markdown
 }
