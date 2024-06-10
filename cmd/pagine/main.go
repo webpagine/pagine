@@ -143,20 +143,39 @@ func serve(root, dest vfs.DirFS) error {
 	if err != nil {
 		return err
 	}
+	defer w.Close()
 
-	err = w.Add(root.Path)
+	notify := func() error {
+		return fs.WalkDir(root, "/", func(path string, d fs.DirEntry, err error) error {
+			if d.IsDir() {
+				err := w.Add(root.DirFS(path).Path)
+				if err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
+	}
+
+	err = notify()
 	if err != nil {
 		return err
 	}
-	defer w.Close()
 
 	go func() {
 		select {
-		case <-w.Events:
+		case e := <-w.Events:
+			fmt.Println(e)
 			err := generateAll(root, dest)
 			if err != nil {
 				fmt.Println(err)
 			}
+		}
+
+		err := notify()
+		if err != nil {
+			fmt.Println(err)
 		}
 	}()
 
