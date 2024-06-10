@@ -89,7 +89,7 @@ func ExecuteLevels(env *Env, root, dest vfs.DirFS, inherit MetadataSet) (Level, 
 		case err == nil:
 			// No error will cause interrupt below.
 
-			for _, unitItem := range unitManifest.Unit {
+			for _, unitItem := range unitManifest.Units {
 				wg.Add(1)
 				go func() {
 					defer wg.Done()

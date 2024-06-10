@@ -71,11 +71,13 @@ func LoadTemplate(root vfs.DirFS) (*Template, error) {
 }
 
 var emptyFuncMap = map[string]any{
-	"attr":           _empty,
+	"getAttr":        empty,
 	"embed":          _empty,
 	"render":         _empty,
 	"renderMarkdown": _empty,
 	"renderAsciidoc": _empty,
 }
+
+func empty() any { return nil }
 
 func _empty(_ any) any { return "" }

@@ -16,7 +16,7 @@ type UnitReport struct {
 }
 
 type UnitManifest struct {
-	Unit []struct {
+	Units []struct {
 		Template string         `toml:"template"`
 		Output   string         `toml:"output"`
 		Define   map[string]any `toml:"define"`
@@ -44,7 +44,7 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		templateBase, _ = strings.CutPrefix(t.Root.Path, env.Root.Path)
 
 		attr = map[string]any{
-			"base":         base,
+			"unitBase":     base,
 			"templateBase": templateBase,
 		}
 	)
@@ -59,13 +59,17 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 	}
 
 	funcMap := map[string]any{
-		"add":            add,
+		"add": add,
+		"sub": sub,
+		"mul": mul,
+		"div": div,
+		"mod": mod,
+
 		"divideSliceByN": divideSliceByN,
 		"mapAsSlice":     mapAsSlice,
 
-		"attr": func(keyStr any) any {
-			return attr[keyStr.(string)]
-		},
+		"getAttr": func() any { return attr },
+
 		"embed": func(pathStr any) any {
 			b, err := root.ReadFile(pathStr.(string))
 			if err != nil {
