@@ -30,7 +30,7 @@ Find the executable that matches your OS and architecture in [releases](https://
 ### Build from source
 
 ```shell
-$ go install github.com/webpagine/pagine/v2/cmd/pagine
+$ go install github.com/webpagine/pagine/v2/cmd/pagine@latest
 ```
 
 ## Usage
