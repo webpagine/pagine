@@ -5,7 +5,7 @@
 package render
 
 import (
-	"github.com/webpagine/pagine/vfs"
+	"github.com/webpagine/pagine/v2/vfs"
 	"io"
 )
 

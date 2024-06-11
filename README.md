@@ -25,12 +25,12 @@ Supported rich text formats:
 
 ### Binaries
 
-Find the executable that matches your OS and architecture in [releases](https://github.com/webpagine/pagine/releases).
+Find the executable that matches your OS and architecture in [releases](https://github.com/webpagine/pagine/v2/releases).
 
 ### Build from source
 
 ```shell
-$ go install github.com/webpagine/pagine/cmd/pagine
+$ go install github.com/webpagine/pagine/v2/cmd/pagine
 ```
 
 ## Usage

@@ -1,8 +1,8 @@
 package structure
 
 import (
-	"github.com/webpagine/pagine/util"
-	"github.com/webpagine/pagine/vfs"
+	"github.com/webpagine/pagine/v2/util"
+	"github.com/webpagine/pagine/v2/vfs"
 	"regexp"
 	"strings"
 )

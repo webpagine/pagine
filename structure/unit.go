@@ -2,9 +2,9 @@ package structure
 
 import (
 	"fmt"
-	"github.com/webpagine/pagine/collection"
-	"github.com/webpagine/pagine/render"
-	"github.com/webpagine/pagine/vfs"
+	"github.com/webpagine/pagine/v2/collection"
+	"github.com/webpagine/pagine/v2/render"
+	"github.com/webpagine/pagine/v2/vfs"
 	"maps"
 	"path/filepath"
 	"strings"
