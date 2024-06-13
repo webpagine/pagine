@@ -16,6 +16,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
+	"time"
 )
 
 var (
@@ -60,6 +62,14 @@ func generateAll(root, dest vfs.DirFS) error {
 	env, err := structure.LoadEnv(root)
 	if err != nil {
 		fmt.Println("Error occurred while loading environment from env.toml:")
+		return err
+	}
+
+	err = os.RemoveAll(dest.Path)
+	switch {
+	case err == nil:
+	case os.IsNotExist(err):
+	default:
 		return err
 	}
 
@@ -163,19 +173,33 @@ func serve(root, dest vfs.DirFS) error {
 		return err
 	}
 
+	var updated atomic.Bool
+
 	go func() {
-		select {
-		case e := <-w.Events:
-			fmt.Println(e)
-			err := generateAll(root, dest)
+		for {
+			if !updated.Load() {
+				updated.Store(true)
+				err := generateAll(root, dest)
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case e := <-w.Events:
+				fmt.Println(e)
+				updated.Store(false)
+			}
+
+			err := notify()
 			if err != nil {
 				fmt.Println(err)
 			}
-		}
-
-		err := notify()
-		if err != nil {
-			fmt.Println(err)
 		}
 	}()
 

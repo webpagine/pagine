@@ -1,5 +1,5 @@
 
-<img src="https://github.com/jellyterra/artworks/raw/master/logo/pagine.svg" width="410.4" height="140" alt="Pagine logo" />
+<img src="https://github.com/jellyterra/artworks/raw/master/logo/pagine_2.svg" height="140" alt="Pagine logo" />
 
 # Pagine v2
 

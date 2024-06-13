@@ -1,10 +1,15 @@
+// Copyright 2024 Jelly Terra
+// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0
+// that can be found in the LICENSE file and https://mozilla.org/MPL/2.0/.
+
 package structure
 
 import (
-	"fmt"
+	"bytes"
 	"github.com/webpagine/pagine/v2/collection"
 	"github.com/webpagine/pagine/v2/render"
 	"github.com/webpagine/pagine/v2/vfs"
+	"html/template"
 	"maps"
 	"path/filepath"
 	"strings"
@@ -30,7 +35,7 @@ type Unit struct {
 }
 
 func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define map[string]any) ([]error, error) {
-	var errors []error
+	var errors collection.Array[error]
 
 	templateName, templateKey := ParseTemplatePair(u.Template)
 
@@ -50,15 +55,16 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 	)
 
 	renderFromPath := func(r render.Renderer, pathStr any) string {
-		result, err := render.FromPath(render.Asciidoc, root, pathStr.(string))
+		result, err := render.FromPath(r, root, pathStr.(string))
 		if err != nil {
-			errors = append(errors, err)
+			errors.Append(err)
 			return ""
 		}
 		return result
 	}
 
-	funcMap := map[string]any{
+	var funcMap map[string]any
+	funcMap = map[string]any{
 		"add": add,
 		"sub": sub,
 		"mul": mul,
@@ -70,10 +76,24 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 
 		"getAttr": func() any { return attr },
 
+		"apply": func(pathStr any, data any) any {
+			t, err := template.New(filepath.Base(pathStr.(string))).Funcs(funcMap).ParseFS(root, pathStr.(string))
+			if err != nil {
+				errors.Append(err)
+				return ""
+			}
+			b := bytes.NewBuffer(nil)
+			err = t.Execute(b, data)
+			if err != nil {
+				errors.Append(err)
+				return ""
+			}
+			return b.String()
+		},
 		"embed": func(pathStr any) any {
 			b, err := root.ReadFile(pathStr.(string))
 			if err != nil {
-				errors = append(errors, err)
+				errors.Append(err)
 				return ""
 			}
 			return string(b)
@@ -81,7 +101,7 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		"render": func(pathStr any) any {
 			r, ok := render.Renderers[filepath.Ext(pathStr.(string))[1:]]
 			if !ok {
-				errors = append(errors, fmt.Errorf("unknown template %q", pathStr))
+				errors.Append(&render.NotFoundError{Path: pathStr.(string)})
 				return ""
 			}
 			return renderFromPath(r, pathStr)
@@ -103,5 +123,5 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		return nil, err
 	}
 
-	return errors, nil
+	return errors.RawArray, nil
 }
