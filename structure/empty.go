@@ -11,6 +11,9 @@ var emptyFuncMap = map[string]any{
 	"div": div,
 	"mod": mod,
 
+	"hasPrefix":  hasPrefix,
+	"trimPrefix": trimPrefix,
+
 	"getAttr": empty,
 
 	"apply":          __empty,

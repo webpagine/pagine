@@ -18,8 +18,8 @@ Build jobs can be completed very fast.
 
 Supported rich text formats:
 
-- Markdown with MathJax/LaTeX support
-- Asciidoc
+- [Markdown](https://markdownguide.org) with [MathJax](https://www.mathjax.org) support
+- [Asciidoc](https://asciidoc.org)
 
 ## Install
 
@@ -88,7 +88,7 @@ To the Go templates files syntax, see [text/template](https://pkg.go.dev/text/te
 
 Example:  `page.html`
 ```html
-<html>
+<html lang="{{ .lang }}">
 <head>
   <title>{{ .title }}</title>
   <link rel="stylesheet" href="{{ (getAttr).templateBase }}/css/base.css" />
@@ -171,9 +171,9 @@ define   = { title = "Page not found" }
 
 ### Engine API
 
-| Func      | Args        | Description                                                                                      |
-|-----------|-------------|--------------------------------------------------------------------------------------------------|
-| `getAttr` | key: String | Get meta information in the form of map about units, hierarchy and templates provided by engine. |
+| Func      | Args                   | Description                                                                                      |
+|-----------|------------------------|--------------------------------------------------------------------------------------------------|
+| `getAttr` | key: String            | Get meta information in the form of map about units, hierarchy and templates provided by engine. |
 
 | Attribution    | Description                                     |
 |----------------|-------------------------------------------------|
@@ -181,6 +181,11 @@ define   = { title = "Page not found" }
 | `templateBase` | It tells the template where it has been stored. | 
 
 ### Data processing
+
+| Func         | Args                        | Result |
+|--------------|-----------------------------|--------|
+| `hasPrefix`  | str: String, prefix: String | Bool   |
+| `trimPrefix` | str: String, prefix: String | String |
 
 | Func             | Args                                            | Result                                           | Description                                                                       |
 |------------------|-------------------------------------------------|--------------------------------------------------|-----------------------------------------------------------------------------------|
@@ -191,12 +196,13 @@ define   = { title = "Page not found" }
 
 Path starts from where the unit is.
 
-| Func             | Args         | Description                             |
-|------------------|--------------|-----------------------------------------|
-| `embed`          | path: String | Embed file raw content.                 |
-| `render`         | path: String | Invoke renderer by file extension name. |
-| `renderAsciidoc` | path: String | Render and embed Asciidoc content.      |
-| `renderMarkdown` | path: String | Render and embed Markdown content.      |
+| Func             | Args                   | Description                             |
+|------------------|------------------------|-----------------------------------------|
+| `apply`          | path: String, data Any | Invoke a template.                      |
+| `embed`          | path: String           | Embed file raw content.                 |
+| `render`         | path: String           | Invoke renderer by file extension name. |
+| `renderAsciidoc` | path: String           | Render and embed Asciidoc content.      |
+| `renderMarkdown` | path: String           | Render and embed Markdown content.      |
 
 | Format   | File Extension Name |
 |----------|---------------------|

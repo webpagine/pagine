@@ -4,11 +4,21 @@
 
 package structure
 
+import "strings"
+
 func add(aInt, bInt any) int { return aInt.(int) + bInt.(int) }
 func sub(aInt, bInt any) int { return aInt.(int) - bInt.(int) }
 func mul(aInt, bInt any) int { return aInt.(int) * bInt.(int) }
 func div(aInt, bInt any) int { return aInt.(int) / bInt.(int) }
 func mod(aInt, bInt any) int { return aInt.(int) % bInt.(int) }
+
+func hasPrefix(sStr any, prefixStr any) bool {
+	return strings.HasPrefix(sStr.(string), prefixStr.(string))
+}
+
+func trimPrefix(sStr any, prefixStr any) string {
+	return strings.TrimPrefix(sStr.(string), prefixStr.(string))
+}
 
 func divideSliceByN(s []any, nInt any) [][]any {
 	n := nInt.(int)

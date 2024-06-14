@@ -71,6 +71,9 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		"div": div,
 		"mod": mod,
 
+		"hasPrefix":  hasPrefix,
+		"trimPrefix": trimPrefix,
+
 		"divideSliceByN": divideSliceByN,
 		"mapAsSlice":     mapAsSlice,
 
