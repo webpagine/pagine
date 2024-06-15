@@ -8,6 +8,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
+	"github.com/gorilla/websocket"
+	"github.com/webpagine/pagine/v2/global"
 	"github.com/webpagine/pagine/v2/structure"
 	"github.com/webpagine/pagine/v2/vfs"
 	"io"
@@ -49,6 +51,8 @@ func _main() error {
 	}
 
 	if *optAddr != "" {
+		global.EnvAttr["isServing"] = true
+
 		err = serve(root, dest)
 		if err != nil {
 			return err
@@ -173,6 +177,8 @@ func serve(root, dest vfs.DirFS) error {
 		return err
 	}
 
+	genEvent := make(chan struct{})
+
 	var updated atomic.Bool
 
 	go func() {
@@ -183,6 +189,8 @@ func serve(root, dest vfs.DirFS) error {
 				if err != nil {
 					fmt.Println(err)
 				}
+				close(genEvent)
+				genEvent = make(chan struct{})
 			}
 			time.Sleep(1 * time.Second)
 		}
@@ -203,5 +211,21 @@ func serve(root, dest vfs.DirFS) error {
 		}
 	}()
 
-	return http.ListenAndServe(*optAddr, http.FileServerFS(dest))
+	mux := http.NewServeMux()
+
+	mux.Handle("/", http.FileServer(http.Dir(dest.Path)))
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		var upgrader websocket.Upgrader
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		go func() {
+			<-genEvent
+			_ = conn.Close()
+		}()
+	})
+
+	return http.ListenAndServe(*optAddr, mux)
 }

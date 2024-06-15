@@ -15,6 +15,9 @@ var emptyFuncMap = map[string]any{
 	"trimPrefix": trimPrefix,
 
 	"getAttr": empty,
+	"getEnv":  empty,
+
+	"getMetadata": empty,
 
 	"apply":          __empty,
 	"embed":          _empty,

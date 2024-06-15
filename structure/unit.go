@@ -7,6 +7,7 @@ package structure
 import (
 	"bytes"
 	"github.com/webpagine/pagine/v2/collection"
+	"github.com/webpagine/pagine/v2/global"
 	"github.com/webpagine/pagine/v2/render"
 	"github.com/webpagine/pagine/v2/vfs"
 	"html/template"
@@ -78,6 +79,9 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		"mapAsSlice":     mapAsSlice,
 
 		"getAttr": func() any { return attr },
+		"getEnv":  func() any { return global.EnvAttr },
+
+		"getMetadata": func() any { return data[templateName] },
 
 		"apply": func(pathStr any, data any) any {
 			t, err := template.New(filepath.Base(pathStr.(string))).Funcs(funcMap).ParseFS(root, pathStr.(string))
