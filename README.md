@@ -59,9 +59,13 @@ $ cd ~/web/my_site
 $ pagine --serve :12450
 ```
 
+It automatically executes generation when file changes are detected by `inotify`.
+
 > [!NOTE]
 > Incremental generation is not implemented yet.<br/>
 > Set the `--public` under `/tmp` is recommended to reduce hard disk writes.
+
+Since v2.1.0, the server provides a WebSocket interface at `/ws` to provide event monitoring for the client, such as page updates.
 
 ## Structure
 
@@ -179,6 +183,10 @@ define   = { title = "Page not found" }
 |----------------|-------------------------------------------------|
 | `unitBase`     | Unit's level's base dir path.                   |
 | `templateBase` | It tells the template where it has been stored. | 
+
+| Func          | Description                                           |
+|---------------|-------------------------------------------------------|
+| `getMetadata` | It returns the root node of metadata of the template. |
 
 ### Data processing
 
