@@ -7,6 +7,7 @@ require (
 	github.com/bytesparadise/libasciidoc v0.8.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gomarkdown/markdown v0.0.0-20240419095408-642f0ee99ae2
+	github.com/gorilla/websocket v1.5.3
 )
 
 require (
@@ -15,7 +16,6 @@ require (
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/mna/pigeon v1.1.0 // indirect
 	github.com/onsi/ginkgo/v2 v2.1.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

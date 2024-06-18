@@ -10,10 +10,10 @@ import (
 	"github.com/webpagine/pagine/v2/global"
 	"github.com/webpagine/pagine/v2/render"
 	"github.com/webpagine/pagine/v2/vfs"
-	"html/template"
 	"maps"
 	"path/filepath"
 	"strings"
+	"text/template"
 )
 
 type UnitReport struct {
