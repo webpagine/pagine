@@ -20,6 +20,7 @@ var emptyFuncMap = map[string]any{
 	"getMetadata": empty,
 
 	"apply":          __empty,
+	"applyFromEnv":   __empty,
 	"embed":          _empty,
 	"render":         _empty,
 	"renderMarkdown": _empty,

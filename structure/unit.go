@@ -64,6 +64,8 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		return result
 	}
 
+	appliedTemplates := map[string]struct{}{}
+
 	var funcMap map[string]any
 	funcMap = map[string]any{
 		"add": add,
@@ -84,6 +86,14 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		"getMetadata": func() any { return data[templateName] },
 
 		"apply": func(pathStr any, data any) any {
+			path := filepath.Join(root.Path, pathStr.(string))
+			if _, ok := appliedTemplates[path]; ok {
+				errors.Append(&RecursiveInvokeError{Templates: nil})
+				return nil
+			}
+			appliedTemplates[path] = struct{}{}
+			defer delete(appliedTemplates, path)
+
 			t, err := template.New(filepath.Base(pathStr.(string))).Funcs(funcMap).ParseFS(root, pathStr.(string))
 			if err != nil {
 				errors.Append(err)
@@ -96,6 +106,33 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 				return ""
 			}
 			return b.String()
+		},
+		"applyFromEnv": func(nameStr any, data any) any {
+			path := nameStr.(string)
+			if _, ok := appliedTemplates[path]; ok {
+				errors.Append(&RecursiveInvokeError{Templates: nil})
+				return nil
+			}
+			appliedTemplates[path] = struct{}{}
+			defer delete(appliedTemplates, path)
+
+			split := strings.Split(nameStr.(string), ":")
+			if len(split) != 2 {
+				errors.Append(&TemplateUndefinedError{Name: nameStr.(string)})
+				return nil
+			}
+			t, ok := env.Templates[split[0]]
+			if !ok {
+				errors.Append(&TemplateUndefinedError{Name: split[0]})
+				return nil
+			}
+			buf := bytes.NewBuffer(nil)
+			err := t.ExecuteTemplate(buf, funcMap, split[1], data)
+			if err != nil {
+				errors.Append(err)
+				return nil
+			}
+			return buf.String()
 		},
 		"embed": func(pathStr any) any {
 			b, err := root.ReadFile(pathStr.(string))

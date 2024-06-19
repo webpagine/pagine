@@ -22,3 +22,11 @@ type TemplateUndefinedError struct {
 func (e *TemplateUndefinedError) Error() string {
 	return fmt.Sprint("template undefined: ", e.Name)
 }
+
+type RecursiveInvokeError struct {
+	Templates []string
+}
+
+func (e *RecursiveInvokeError) Error() string {
+	return fmt.Sprint("recursive template invoke detected")
+}

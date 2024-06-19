@@ -33,7 +33,7 @@ type Template struct {
 	GoTemplate *template.Template
 }
 
-func (t *Template) ExecuteTemplate(wr io.Writer, funcs map[string]any, key string, data map[string]any) error {
+func (t *Template) ExecuteTemplate(wr io.Writer, funcs map[string]any, key string, data any) error {
 	name, ok := t.Templates[key]
 	if !ok {
 		return &TemplateNotFoundError{Template: t, Want: key}
