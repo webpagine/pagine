@@ -33,6 +33,9 @@ Find the executable that matches your OS and architecture in [releases](https://
 $ go install github.com/webpagine/pagine/v2/cmd/pagine@latest
 ```
 
+> [!TIP]
+> Install Pagine via Go mod is recommended for non-amd64 platforms. Choose Go toolchain for your platform [here](https://go.dev/dl).
+
 ## Usage
 
 Usage of pagine:
@@ -66,6 +69,10 @@ It automatically executes generation when file changes are detected by `inotify`
 > Set the `--public` under `/tmp` is recommended to reduce hard disk writes.
 
 Since v2.1.0, the server provides a WebSocket interface at `/ws` to provide event monitoring for the client, such as page updates.
+
+> [!CAUTION]
+> Exposing your Pagine server to the public network might be risky!
+> You should deploy your final pages via static page services.
 
 ## Structure
 
@@ -175,9 +182,14 @@ define   = { title = "Page not found" }
 
 ### Engine API
 
-| Func      | Args                   | Description                                                                                      |
-|-----------|------------------------|--------------------------------------------------------------------------------------------------|
-| `getAttr` | key: String            | Get meta information in the form of map about units, hierarchy and templates provided by engine. |
+| Func      | Description                                                                                      |
+|-----------|--------------------------------------------------------------------------------------------------|
+| `getEnv`  | Get environment information for debug use.                                                       | 
+| `getAttr` | Get meta information in the form of map about units, hierarchy and templates provided by engine. |
+
+| Environment | Description                                 |
+|-------------|---------------------------------------------|
+| `isServing` | Return true if Pagine is running as server. |
 
 | Attribution    | Description                                     |
 |----------------|-------------------------------------------------|
@@ -187,6 +199,9 @@ define   = { title = "Page not found" }
 | Func          | Description                                           |
 |---------------|-------------------------------------------------------|
 | `getMetadata` | It returns the root node of metadata of the template. |
+
+> [!TIP]
+> `(getEnv).isServing` can be used to enable some debug code in templates such as page realtime update.
 
 ### Data processing
 
@@ -231,7 +246,7 @@ Upload `public` to your server.
 
 GitHub Actions workflow configuration can be found in [Get Started](https://github.com/webpagine/get-started) repository.
 
-# FAQ
+## FAQ
 
 ### Why another generator? Isn't Hugo enough?
 
