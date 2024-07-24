@@ -8,6 +8,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gomarkdown/markdown v0.0.0-20240419095408-642f0ee99ae2
 	github.com/gorilla/websocket v1.5.3
+	github.com/jellyterra/collection-go v0.0.1
 )
 
 require (

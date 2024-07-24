@@ -5,7 +5,7 @@
 package structure
 
 import (
-	"github.com/webpagine/pagine/v2/collection"
+	"github.com/jellyterra/collection-go"
 	"github.com/webpagine/pagine/v2/util"
 	"github.com/webpagine/pagine/v2/vfs"
 	"maps"
@@ -69,9 +69,9 @@ func ExecuteLevels(env *Env, root, dest vfs.DirFS, inherit MetadataSet) (Level, 
 		unitManifest UnitManifest
 		metadata     MetadataSet
 
-		units   collection.SyncArray[Unit]
-		reports collection.SyncArray[LevelReport]
-		levels  collection.SyncArray[Level]
+		units   collection.SyncVector[Unit]
+		reports collection.SyncVector[LevelReport]
+		levels  collection.SyncVector[Level]
 	)
 
 	err := func() error {
@@ -104,7 +104,7 @@ func ExecuteLevels(env *Env, root, dest vfs.DirFS, inherit MetadataSet) (Level, 
 					}
 
 					unit.Report.TemplateErrors, unit.Report.Error = unit.Generate(env, root, dest, metadata, unitItem.Define)
-					units.Append(unit)
+					units.Push(unit)
 				}()
 			}
 		case os.IsNotExist(err):
@@ -132,13 +132,13 @@ func ExecuteLevels(env *Env, root, dest vfs.DirFS, inherit MetadataSet) (Level, 
 
 				level, err := ExecuteLevels(env, sub, dest, metadata)
 				if err != nil {
-					reports.Append(LevelReport{
+					reports.Push(LevelReport{
 						Level: &level,
 						Err:   err,
 					})
 					return
 				}
-				levels.Append(level)
+				levels.Push(level)
 			}()
 		}
 
@@ -153,8 +153,8 @@ func ExecuteLevels(env *Env, root, dest vfs.DirFS, inherit MetadataSet) (Level, 
 	return Level{
 		Root:    root,
 		Data:    metadata,
-		Units:   units.RawArray,
-		Levels:  levels.RawArray,
-		Reports: reports.RawArray,
+		Units:   units.It.Raw,
+		Levels:  levels.It.Raw,
+		Reports: reports.It.Raw,
 	}, nil
 }

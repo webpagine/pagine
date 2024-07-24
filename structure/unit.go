@@ -6,7 +6,7 @@ package structure
 
 import (
 	"bytes"
-	"github.com/webpagine/pagine/v2/collection"
+	"github.com/jellyterra/collection-go"
 	"github.com/webpagine/pagine/v2/global"
 	"github.com/webpagine/pagine/v2/render"
 	"github.com/webpagine/pagine/v2/vfs"
@@ -36,7 +36,7 @@ type Unit struct {
 }
 
 func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define map[string]any) ([]error, error) {
-	var errors collection.Array[error]
+	var errors collection.Vector[error]
 
 	templateName, templateKey := ParseTemplatePair(u.Template)
 
@@ -58,7 +58,7 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 	renderFromPath := func(r render.Renderer, pathStr any) string {
 		result, err := render.FromPath(r, root, pathStr.(string))
 		if err != nil {
-			errors.Append(err)
+			errors.Push(err)
 			return ""
 		}
 		return result
@@ -88,7 +88,7 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		"apply": func(pathStr any, data any) any {
 			path := filepath.Join(root.Path, pathStr.(string))
 			if _, ok := appliedTemplates[path]; ok {
-				errors.Append(&RecursiveInvokeError{Templates: nil})
+				errors.Push(&RecursiveInvokeError{Templates: nil})
 				return nil
 			}
 			appliedTemplates[path] = struct{}{}
@@ -96,13 +96,13 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 
 			t, err := template.New(filepath.Base(pathStr.(string))).Funcs(funcMap).ParseFS(root, pathStr.(string))
 			if err != nil {
-				errors.Append(err)
+				errors.Push(err)
 				return ""
 			}
 			b := bytes.NewBuffer(nil)
 			err = t.Execute(b, data)
 			if err != nil {
-				errors.Append(err)
+				errors.Push(err)
 				return ""
 			}
 			return b.String()
@@ -110,7 +110,7 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		"applyFromEnv": func(nameStr any, data any) any {
 			path := nameStr.(string)
 			if _, ok := appliedTemplates[path]; ok {
-				errors.Append(&RecursiveInvokeError{Templates: nil})
+				errors.Push(&RecursiveInvokeError{Templates: nil})
 				return nil
 			}
 			appliedTemplates[path] = struct{}{}
@@ -118,18 +118,18 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 
 			split := strings.Split(nameStr.(string), ":")
 			if len(split) != 2 {
-				errors.Append(&TemplateUndefinedError{Name: nameStr.(string)})
+				errors.Push(&TemplateUndefinedError{Name: nameStr.(string)})
 				return nil
 			}
 			t, ok := env.Templates[split[0]]
 			if !ok {
-				errors.Append(&TemplateUndefinedError{Name: split[0]})
+				errors.Push(&TemplateUndefinedError{Name: split[0]})
 				return nil
 			}
 			buf := bytes.NewBuffer(nil)
 			err := t.ExecuteTemplate(buf, funcMap, split[1], data)
 			if err != nil {
-				errors.Append(err)
+				errors.Push(err)
 				return nil
 			}
 			return buf.String()
@@ -137,7 +137,7 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		"embed": func(pathStr any) any {
 			b, err := root.ReadFile(pathStr.(string))
 			if err != nil {
-				errors.Append(err)
+				errors.Push(err)
 				return ""
 			}
 			return string(b)
@@ -145,7 +145,7 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		"render": func(pathStr any) any {
 			r, ok := render.Renderers[filepath.Ext(pathStr.(string))[1:]]
 			if !ok {
-				errors.Append(&render.NotFoundError{Path: pathStr.(string)})
+				errors.Push(&render.NotFoundError{Path: pathStr.(string)})
 				return ""
 			}
 			return renderFromPath(r, pathStr)
@@ -167,5 +167,5 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		return nil, err
 	}
 
-	return errors.RawArray, nil
+	return errors.Raw, nil
 }
