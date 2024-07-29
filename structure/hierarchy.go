@@ -76,7 +76,7 @@ func ExecuteLevels(env *Env, root, dest *vfs.DirFS, inherit MetadataSet) (Level,
 
 	err := func() error {
 
-		err := util.UnmarshalTOMLFile(root, "/metadata.toml", &metadata)
+		err := util.UnmarshalYAMLFile(root, "/metadata.yaml", &metadata)
 		switch {
 		case err == nil:
 			metadata = metadata.Inherit(inherit)
@@ -88,7 +88,7 @@ func ExecuteLevels(env *Env, root, dest *vfs.DirFS, inherit MetadataSet) (Level,
 			}
 		}
 
-		err = util.UnmarshalTOMLFile(root, "/unit.toml", &unitManifest)
+		err = util.UnmarshalYAMLFile(root, "/unit.yaml", &unitManifest)
 		switch {
 		case err == nil:
 			// No error will cause interrupt below.

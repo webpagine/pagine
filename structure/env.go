@@ -12,9 +12,9 @@ import (
 )
 
 type EnvManifest struct {
-	Use map[string]string `toml:"use"`
+	Use map[string]string `yaml:"use"`
 
-	Ignore []string `toml:"ignore"`
+	Ignore []string `yaml:"ignore"`
 }
 
 type Env struct {
@@ -29,7 +29,7 @@ func LoadEnv(root *vfs.DirFS) (*Env, error) {
 	var env = Env{Root: root, Templates: map[string]*Template{}}
 	var manifest EnvManifest
 
-	err := util.UnmarshalTOMLFile(root, "/env.toml", &manifest)
+	err := util.UnmarshalYAMLFile(root, "/env.yaml", &manifest)
 	if err != nil {
 		return nil, err
 	}

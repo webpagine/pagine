@@ -3,9 +3,9 @@ module github.com/webpagine/pagine/v2
 go 1.22
 
 require (
-	github.com/BurntSushi/toml v1.3.2
 	github.com/bytesparadise/libasciidoc v0.8.0
 	github.com/fsnotify/fsnotify v1.7.0
+	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gomarkdown/markdown v0.0.0-20240419095408-642f0ee99ae2
 	github.com/gorilla/websocket v1.5.3
 	github.com/jellyterra/collection-go v0.0.3

@@ -13,14 +13,14 @@ import (
 
 type TemplateManifest struct {
 	Manifest struct {
-		Canonical string   `toml:"canonical"`
-		Patterns  []string `toml:"patterns"`
-	} `toml:"manifest"`
+		Canonical string   `yaml:"canonical"`
+		Patterns  []string `yaml:"patterns"`
+	} `yaml:"manifest"`
 
 	Templates []struct {
-		Name   string `toml:"name"`
-		Export string `toml:"export"`
-	} `toml:"templates"`
+		Name   string `yaml:"name"`
+		Export string `yaml:"export"`
+	} `yaml:"templates"`
 }
 
 type Template struct {
@@ -51,7 +51,7 @@ func LoadTemplate(root *vfs.DirFS) (*Template, error) {
 
 	var manifest TemplateManifest
 
-	err := util.UnmarshalTOMLFile(root, "/manifest.toml", &manifest)
+	err := util.UnmarshalYAMLFile(root, "/manifest.yaml", &manifest)
 	if err != nil {
 		return nil, err
 	}

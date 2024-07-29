@@ -23,10 +23,10 @@ type UnitReport struct {
 
 type UnitManifest struct {
 	Units []struct {
-		Template string         `toml:"template"`
-		Output   string         `toml:"output"`
-		Define   map[string]any `toml:"define"`
-	} `toml:"unit"`
+		Template string         `yaml:"template"`
+		Output   string         `yaml:"output"`
+		Define   map[string]any `yaml:"define"`
+	} `yaml:"unit"`
 }
 
 type Unit struct {

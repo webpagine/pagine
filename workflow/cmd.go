@@ -7,8 +7,8 @@ package workflow
 import "os/exec"
 
 type Command struct {
-	Exec string   `toml:"exec"`
-	Args []string `toml:"args"`
+	Exec string   `yaml:"exec"`
+	Args []string `yaml:"args"`
 }
 
 func (c *Command) Execute() error {
