@@ -148,7 +148,9 @@ func ExecuteLevels(env *Env, root, dest *vfs.DirFS, inherit MetadataSet) (Level,
 		return nil
 	}()
 	if err != nil {
-		return Level{}, err
+		return Level{
+			Root: root,
+		}, err
 	}
 
 	wg.Wait()
