@@ -9,7 +9,7 @@ import (
 	"github.com/webpagine/pagine/v2/vfs"
 )
 
-func UnmarshalTOMLFile(root vfs.DirFS, path string, v any) error {
+func UnmarshalTOMLFile(root *vfs.DirFS, path string, v any) error {
 	b, err := root.ReadFile(path)
 	if err != nil {
 		return err

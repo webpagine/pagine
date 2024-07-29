@@ -14,7 +14,7 @@ import (
 )
 
 type Level struct {
-	Root vfs.DirFS
+	Root *vfs.DirFS
 
 	Data MetadataSet
 
@@ -61,7 +61,7 @@ func (m MetadataSet) Inherit(old MetadataSet) MetadataSet {
 	return cloned
 }
 
-func ExecuteLevels(env *Env, root, dest vfs.DirFS, inherit MetadataSet) (Level, error) {
+func ExecuteLevels(env *Env, root, dest *vfs.DirFS, inherit MetadataSet) (Level, error) {
 
 	var (
 		wg sync.WaitGroup
@@ -124,7 +124,10 @@ func ExecuteLevels(env *Env, root, dest vfs.DirFS, inherit MetadataSet) (Level, 
 				continue
 			}
 
-			sub := root.DirFS(entry.Name())
+			sub, err := root.Chroot(entry.Name())
+			if err != nil {
+				return err
+			}
 
 			wg.Add(1)
 			go func() {

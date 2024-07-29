@@ -35,7 +35,7 @@ type Unit struct {
 	Report   UnitReport
 }
 
-func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define map[string]any) ([]error, error) {
+func (u *Unit) Generate(env *Env, root, dest *vfs.DirFS, data MetadataSet, define map[string]any) ([]error, error) {
 	var errors collection.Vector[error]
 
 	templateName, templateKey := ParseTemplatePair(u.Template)
@@ -48,6 +48,8 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 	var (
 		base, _         = strings.CutPrefix(root.Path, env.Root.Path)
 		templateBase, _ = strings.CutPrefix(t.Root.Path, env.Root.Path)
+
+		dataMap collection.Map[string, any]
 
 		attr = map[string]any{
 			"unitBase":     base,
@@ -68,23 +70,30 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 
 	var funcMap map[string]any
 	funcMap = map[string]any{
+
+		// Arithmetic.
 		"add": add,
 		"sub": sub,
 		"mul": mul,
 		"div": div,
 		"mod": mod,
 
+		// String processing.
 		"hasPrefix":  hasPrefix,
 		"trimPrefix": trimPrefix,
 
+		// Data collection processing.
 		"divideSliceByN": divideSliceByN,
 		"mapAsSlice":     mapAsSlice,
 
+		// Environment information.
 		"getAttr": func() any { return attr },
 		"getEnv":  func() any { return global.EnvAttr },
 
+		// Hierarchy information.
 		"getMetadata": func() any { return data[templateName] },
 
+		// Apply the template file located at `pathStr`.
 		"apply": func(pathStr any, data any) any {
 			path := filepath.Join(root.Path, pathStr.(string))
 			if _, ok := appliedTemplates[path]; ok {
@@ -107,6 +116,8 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 			}
 			return b.String()
 		},
+
+		// Apply the template defined as `nameStr` in `env`.
 		"applyFromEnv": func(nameStr any, data any) any {
 			path := nameStr.(string)
 			if _, ok := appliedTemplates[path]; ok {
@@ -134,6 +145,8 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 			}
 			return buf.String()
 		},
+
+		// Embed the raw file content located at `pathStr`.
 		"embed": func(pathStr any) any {
 			b, err := root.ReadFile(pathStr.(string))
 			if err != nil {
@@ -142,6 +155,8 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 			}
 			return string(b)
 		},
+
+		// Render the file content located at `pathStr` by extension name.
 		"render": func(pathStr any) any {
 			r, ok := render.Renderers[filepath.Ext(pathStr.(string))[1:]]
 			if !ok {
@@ -150,7 +165,11 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 			}
 			return renderFromPath(r, pathStr)
 		},
+
+		// Render the Asciidoc file content located at `pathStr`.
 		"renderAsciidoc": func(pathStr any) any { return renderFromPath(render.Asciidoc, pathStr) },
+
+		// Render the Markdown file content located at `pathStr`.
 		"renderMarkdown": func(pathStr any) any { return renderFromPath(render.Markdown, pathStr) },
 	}
 
@@ -159,10 +178,10 @@ func (u *Unit) Generate(env *Env, root, dest vfs.DirFS, data MetadataSet, define
 		return nil, err
 	}
 
-	dataMap := maps.Clone(data[templateName])
-	collection.MergeRawMap(dataMap, define)
+	dataMap.Raw = maps.Clone(data[templateName])
+	dataMap.MergeRaw(define)
 
-	err = t.ExecuteTemplate(f, funcMap, templateKey, dataMap)
+	err = t.ExecuteTemplate(f, funcMap, templateKey, dataMap.Raw)
 	if err != nil {
 		return nil, err
 	}

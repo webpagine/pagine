@@ -62,7 +62,7 @@ func _main() error {
 	return nil
 }
 
-func generateAll(root, dest vfs.DirFS) error {
+func generateAll(root, dest *vfs.DirFS) error {
 	env, err := structure.LoadEnv(root)
 	if err != nil {
 		fmt.Println("Error occurred while loading environment from env.toml:")
@@ -152,7 +152,7 @@ func walkLevels(level *structure.Level) {
 	}
 }
 
-func serve(root, dest vfs.DirFS) error {
+func serve(root, dest *vfs.DirFS) error {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
@@ -162,7 +162,12 @@ func serve(root, dest vfs.DirFS) error {
 	notify := func() error {
 		return fs.WalkDir(root, "/", func(path string, d fs.DirEntry, err error) error {
 			if d.IsDir() {
-				err := w.Add(root.DirFS(path).Path)
+				sub, err := root.Chroot(path)
+				if err != nil {
+					return err
+				}
+
+				err = w.Add(sub.Path)
 				if err != nil {
 					return err
 				}

@@ -24,7 +24,7 @@ type TemplateManifest struct {
 }
 
 type Template struct {
-	Root vfs.DirFS
+	Root *vfs.DirFS
 
 	CanonicalName string
 
@@ -47,7 +47,7 @@ func (t *Template) ExecuteTemplate(wr io.Writer, funcs map[string]any, key strin
 	return goTemplate.Funcs(funcs).ExecuteTemplate(wr, name, data)
 }
 
-func LoadTemplate(root vfs.DirFS) (*Template, error) {
+func LoadTemplate(root *vfs.DirFS) (*Template, error) {
 
 	var manifest TemplateManifest
 

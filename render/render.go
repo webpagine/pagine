@@ -24,7 +24,7 @@ func FromFile(r Renderer, file io.Reader) (string, error) {
 	return r(b)
 }
 
-func FromPath(r Renderer, root vfs.DirFS, path string) (string, error) {
+func FromPath(r Renderer, root *vfs.DirFS, path string) (string, error) {
 	f, err := root.Open(path)
 	if err != nil {
 		return "", err

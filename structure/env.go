@@ -18,14 +18,14 @@ type EnvManifest struct {
 }
 
 type Env struct {
-	Root vfs.DirFS
+	Root *vfs.DirFS
 
 	Templates map[string]*Template
 
 	IgnoreGlobs []*regexp.Regexp
 }
 
-func LoadEnv(root vfs.DirFS) (*Env, error) {
+func LoadEnv(root *vfs.DirFS) (*Env, error) {
 	var env = Env{Root: root, Templates: map[string]*Template{}}
 	var manifest EnvManifest
 
@@ -44,7 +44,12 @@ func LoadEnv(root vfs.DirFS) (*Env, error) {
 	}
 
 	for templateName, templatePath := range manifest.Use {
-		t, err := LoadTemplate(root.DirFS(templatePath))
+		sub, err := root.Chroot(templatePath)
+		if err != nil {
+			return nil, err
+		}
+
+		t, err := LoadTemplate(sub)
 		if err != nil {
 			return nil, err
 		}
