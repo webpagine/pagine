@@ -85,6 +85,99 @@ func getFuncMap(
 		})
 	}
 
+	apply := func(pathStr any, data any) any {
+		return wrap(func() (string, error) {
+
+			path := filepath.Join(root.Path, pathStr.(string))
+
+			// Detect recursion.
+			if _, ok := appliedTemplates[path]; ok {
+				return "", &RecursiveInvokeError{Templates: nil}
+			}
+			appliedTemplates[path] = struct{}{}
+			defer delete(appliedTemplates, path)
+
+			// Template file base directory.
+			templateBase, _ := strings.CutPrefix(filepath.Base(path), env.Root.Path)
+
+			funcMap, errors2, err := getFuncMap(
+				appliedTemplates,
+				templateBase,
+				env,
+				root,
+				dest,
+				data.(map[string]any),
+				dataSet,
+			)
+			if err != nil {
+				return "", err
+			}
+			defer errors.Push(errors2.Raw...)
+
+			return executeTemplateFile(root, pathStr.(string), funcMap, data.(map[string]any))
+		})
+	}
+
+	applyFromEnv := func(nameStr any, data any) any {
+		return wrap(func() (string, error) {
+
+			var dataMap collection.Map[string, any]
+
+			path := nameStr.(string)
+
+			// Detect recursion.
+			if _, ok := appliedTemplates[path]; ok {
+				return "", &RecursiveInvokeError{Templates: nil}
+			}
+			appliedTemplates[path] = struct{}{}
+			defer delete(appliedTemplates, path)
+
+			templateName, templateKey := ParseTemplatePair(nameStr.(string))
+
+			// Get matched template from `env`.
+			t, ok := env.Templates[templateName]
+			if !ok {
+				return "", &TemplateUndefinedError{Name: templateName}
+			}
+
+			// Inherit.
+			dataMap.Raw = maps.Clone(dataSet[templateName])
+
+			// Override.
+			dataMap.MergeRaw(data.(map[string]any))
+
+			// Global template base directory.
+			templateBase := env.BaseOf(t.Root)
+
+			funcMap, errors2, err := getFuncMap(
+				appliedTemplates,
+				templateBase,
+				env,
+				root,
+				dest,
+				dataMap.Raw,
+				dataSet,
+			)
+			if err != nil {
+				return "", err
+			}
+			defer errors.Push(errors2.Raw...)
+
+			return executeTemplate(t, templateKey, funcMap, dataMap.Raw)
+		})
+	}
+
+	applyCanonical := func(canonicalStr any, data any) any {
+		return wrap(func() (string, error) {
+			short, ok := env.CanonicalNames[canonicalStr.(string)]
+			if !ok {
+				return "", &TemplateUndefinedError{Name: canonicalStr.(string)}
+			}
+
+			return applyFromEnv(short, data).(string), nil
+		})
+	}
+
 	funcMap = map[string]any{
 
 		// Arithmetic.
@@ -110,88 +203,13 @@ func getFuncMap(
 		"getMetadata": func() any { return data },
 
 		// Apply the template file located at `pathStr`.
-		"apply": func(pathStr any, data any) any {
-			return wrap(func() (string, error) {
-
-				path := filepath.Join(root.Path, pathStr.(string))
-
-				// Detect recursion.
-				if _, ok := appliedTemplates[path]; ok {
-					return "", &RecursiveInvokeError{Templates: nil}
-				}
-				appliedTemplates[path] = struct{}{}
-				defer delete(appliedTemplates, path)
-
-				// Template file base directory.
-				templateBase, _ := strings.CutPrefix(filepath.Base(path), env.Root.Path)
-
-				funcMap, errors2, err := getFuncMap(
-					appliedTemplates,
-					templateBase,
-					env,
-					root,
-					dest,
-					data.(map[string]any),
-					dataSet,
-				)
-				if err != nil {
-					return "", err
-				}
-				defer errors.Push(errors2.Raw...)
-
-				return executeTemplateFile(root, pathStr.(string), funcMap, data.(map[string]any))
-			})
-		},
+		"apply": apply,
 
 		// Apply the template defined as `nameStr` in `env`.
-		"applyFromEnv": func(nameStr any, data any) any {
-			return wrap(func() (string, error) {
+		"applyFromEnv": applyFromEnv,
 
-				var dataMap collection.Map[string, any]
-
-				path := nameStr.(string)
-
-				// Detect recursion.
-				if _, ok := appliedTemplates[path]; ok {
-					return "", &RecursiveInvokeError{Templates: nil}
-				}
-				appliedTemplates[path] = struct{}{}
-				defer delete(appliedTemplates, path)
-
-				templateName, templateKey := ParseTemplatePair(nameStr.(string))
-
-				// Get matched template from `env`.
-				t, ok := env.Templates[templateName]
-				if !ok {
-					return "", &TemplateUndefinedError{Name: templateName}
-				}
-
-				// Inherit.
-				dataMap.Raw = maps.Clone(dataSet[templateName])
-
-				// Override.
-				dataMap.MergeRaw(data.(map[string]any))
-
-				// Global template base directory.
-				templateBase := env.BaseOf(t.Root)
-
-				funcMap, errors2, err := getFuncMap(
-					appliedTemplates,
-					templateBase,
-					env,
-					root,
-					dest,
-					dataMap.Raw,
-					dataSet,
-				)
-				if err != nil {
-					return "", err
-				}
-				defer errors.Push(errors2.Raw...)
-
-				return executeTemplate(t, templateKey, funcMap, dataMap.Raw)
-			})
-		},
+		// Apply the template that the canonical name matched.
+		"applyCanonical": applyCanonical,
 
 		// Embed the raw file content located at `pathStr`.
 		"embed": func(pathStr any) any {

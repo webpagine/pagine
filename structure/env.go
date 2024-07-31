@@ -22,6 +22,8 @@ type Env struct {
 
 	Templates map[string]*Template
 
+	CanonicalNames map[string]string
+
 	IgnoreGlobs []*regexp.Regexp
 }
 
@@ -60,6 +62,7 @@ func LoadEnv(root *vfs.DirFS) (*Env, error) {
 		}
 
 		env.Templates[templateName] = t
+		env.CanonicalNames[t.CanonicalName] = templateName
 	}
 
 	return &env, nil
