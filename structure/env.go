@@ -25,6 +25,11 @@ type Env struct {
 	IgnoreGlobs []*regexp.Regexp
 }
 
+func (e *Env) BaseOf(fs *vfs.DirFS) string {
+	base, _ := strings.CutPrefix(fs.Path, e.Root.Path)
+	return base
+}
+
 func LoadEnv(root *vfs.DirFS) (*Env, error) {
 	var env = Env{Root: root, Templates: map[string]*Template{}}
 	var manifest EnvManifest

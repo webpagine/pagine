@@ -219,13 +219,13 @@ define   = { title = "Page not found" }
 
 Path starts from where the unit is.
 
-| Func             | Args                   | Description                             |
-|------------------|------------------------|-----------------------------------------|
-| `apply`          | path: String, data Any | Invoke a template.                      |
-| `embed`          | path: String           | Embed file raw content.                 |
-| `render`         | path: String           | Invoke renderer by file extension name. |
-| `renderAsciidoc` | path: String           | Render and embed Asciidoc content.      |
-| `renderMarkdown` | path: String           | Render and embed Markdown content.      |
+| Func             | Args                              | Description                             |
+|------------------|-----------------------------------|-----------------------------------------|
+| `apply`          | path: String, data map[string]Any | Invoke a template.                      |
+| `embed`          | path: String                      | Embed file raw content.                 |
+| `render`         | path: String                      | Invoke renderer by file extension name. |
+| `renderAsciidoc` | path: String                      | Render and embed Asciidoc content.      |
+| `renderMarkdown` | path: String                      | Render and embed Markdown content.      |
 
 | Format   | File Extension Name |
 |----------|---------------------|
