@@ -1,7 +1,7 @@
 
 <img src="https://github.com/jellyterra/artworks/raw/master/logo/pagine_v2.svg" height="140" alt="Pagine logo" />
 
-# Pagine v2
+# Pagine v2.2
 
 Pagine is an high-performance website constructor that makes full use of multicore hardware.
 
@@ -81,18 +81,18 @@ Since v2.1.0, the server provides a WebSocket interface at `/ws` to provide even
 Template is a set of page frames (Go template file) and assets (e.g. SVGs, stylesheets and scripts).
 
 Manifest of one template looks like:
-```toml
-[manifest]
-canonical = "com.symboltics.pagine.genesis" # Canonical name
-patterns  = [ "/*html" ]                    # Matched files will be added as template file.
+```yaml
+manifest:
+  canonical: "com.symboltics.pagine.genesis" # Canonical name
+  patterns:
+    - "/*html"                    # Matched files will be added as template file.
 
-[[templates]]
-name   = "page"      # Export as name `page`
-export = "page.html" # Export `page.html`
+templates:
+  - name: "page"        # Export as name `page`
+    export: "page.html" # Export `page.html`
 
-[[templates]]
-name   = "post"      # Export as name `post`
-export = "post.html" # Export `post.html`
+  - name: "post"        # Export as name `post`
+    export: "post.html" # Export `post.html`
 ```
 
 To the Go templates files syntax, see [text/template](https://pkg.go.dev/text/template).
@@ -116,12 +116,13 @@ Example:  `page.html`
 
 "Environment" is the configuration of the details of the entire process.
 
-```toml
-ignore = [ "/.git*" ] # Pattern matching. Matched files will not be **copied** to the public/destination.
+```yaml
+ignore:
+  - "/.git*" # Pattern matching. Matched files will not be **copied** to the public/destination.
 
-[use]
-genesis = "/templates/genesis"
-another = "/templates/something_else" # Load and set alias for the template.
+use:
+  genesis: "/templates/genesis"
+  another: "/templates/something_else" # Load and set alias for the template.
 ```
 
 Installing templates via Git submodule is recommended. Such as:
@@ -140,32 +141,36 @@ Each template has its alias that defined in `env` as the namespace.
 
 Levels can override fields propagated from parents.
 
-Example: `/metadata.toml`
-```toml
-[genesis]
-title = "Pagine"
+Example: `/metadata.yaml`
+```yaml
+genesis:
+  title: "Pagine"
 
-[genesis.head]
-icon = "/favicon.ico"
+  head:
+    icon: "/favicon.ico"
 
-[[genesis.header.nav.items]]
-name = "Documentation"
-link = "/docs/"
+    nav:
+      items:
+        - name: "Documentation"
+          link: "/docs/"
 ```
 
 ### Unit
 
-Example: `/unit.toml`
-```toml
-[[unit]]
-template = "genesis:page"       # Which template to use.
-output   = "/index.html"        # Where to save the result.
-define   = { title = "Pagine" } # Unit-specified metadata.
+Example: `/unit.yaml`
+```yaml
+unit:
+  - template: "genesis:page" # Which template to use.
+    output: "/index.html"    # Where to save the result.
+    define:
+      title: "Pagine"        # Unit-specified metadata.
+      content: "README.md"
 
-[[unit]]
-template = "genesis:page"
-output   = "/404.html"
-define   = { title = "Page not found" }
+  - template: "genesis:page"
+    output: "/404.html"
+    define:
+      title: "Page not found"
+      content: "404.md"
 ```
 
 ## Builtin functions
@@ -258,17 +263,13 @@ And Pagine does not focus on Markdown only, I hope to support various kinds of s
 
 ### Can I use Pagine for building complex web application?
 
-It can only help you get rid of repetitive work about static contents.
+Yes. It can help you get rid of repetitive work about static contents.
 
-Templates can increase productivity as long as Pagine well integrated with external tools.
+And templates can also increase productivity as long as Pagine well integrated with external tools via ***workflow***.
 
-So, **it depends**.
+### Co-operate with external tools such as TypeScript compiler or npx?
 
-### Co-operate with external tools such as npx?
-
-It is possible. This step should be transparent to external tools.
-
-Run `npx` in *public* directory after the generation by Pagine.
+It can be done via ***workflow***.
 
 ### What is the origin of the logo and name?
 
