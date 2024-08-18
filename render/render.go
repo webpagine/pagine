@@ -5,30 +5,32 @@
 package render
 
 import (
-	"github.com/webpagine/pagine/v2/vfs"
-	"io"
+	"mime"
+	"path/filepath"
 )
 
 type Renderer func(content []byte) (string, error)
 
-// Renderers
-// Register renderers in independent packages by init()
+func ByMimeType(mimeType string) (Renderer, error) {
+	r, ok := Renderers[mimeType]
+	if !ok {
+		return nil, &NoRenderFoundError{MimeType: mimeType}
+	}
+
+	return r, nil
+}
+
+func ByExtName(path string) (Renderer, error) {
+	ext := filepath.Ext(path)
+
+	mediaType := mime.TypeByExtension(ext)
+	if mediaType == "" {
+		return nil, &UnknownExtError{Ext: ext}
+	}
+
+	mimeType, _, _ := mime.ParseMediaType(mediaType)
+
+	return ByMimeType(mimeType)
+}
+
 var Renderers = map[string]Renderer{}
-
-func FromFile(r Renderer, file io.Reader) (string, error) {
-	b, err := io.ReadAll(file)
-	if err != nil {
-		return "", err
-	}
-
-	return r(b)
-}
-
-func FromPath(r Renderer, root *vfs.DirFS, path string) (string, error) {
-	f, err := root.Open(path)
-	if err != nil {
-		return "", err
-	}
-
-	return FromFile(r, f)
-}

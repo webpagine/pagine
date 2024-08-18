@@ -6,13 +6,23 @@ package structure
 
 import "fmt"
 
+type TemplateReport struct{}
+
+type UndefinedStdError struct {
+	Std string
+}
+
+func (e UndefinedStdError) Error() string {
+	return fmt.Sprint("undefined standard func set: ", e.Std)
+}
+
 type TemplateNotFoundError struct {
 	Template *Template
-	Want     string
+	Key      string
 }
 
 func (e *TemplateNotFoundError) Error() string {
-	return fmt.Sprint("template not found in [", e.Template.CanonicalName, "]: ", e.Want)
+	return fmt.Sprint("template key [", e.Key, "] not found in [", e.Template.CanonicalName, "]")
 }
 
 type TemplateUndefinedError struct {

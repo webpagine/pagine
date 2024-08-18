@@ -5,17 +5,11 @@
 package structure
 
 import (
-	"github.com/webpagine/pagine/v2/util"
 	"github.com/webpagine/pagine/v2/vfs"
+	"path/filepath"
 	"regexp"
-	"strings"
+	"text/template"
 )
-
-type EnvManifest struct {
-	Use map[string]string `yaml:"use"`
-
-	Ignore []string `yaml:"ignore"`
-}
 
 type Env struct {
 	Root *vfs.DirFS
@@ -25,54 +19,68 @@ type Env struct {
 	CanonicalNames map[string]string
 
 	IgnoreGlobs []*regexp.Regexp
+
+	IsServing bool
+
+	CachedTemplates map[string]*template.Template
 }
 
 func (e *Env) BaseOf(fs *vfs.DirFS) string {
-	base, _ := strings.CutPrefix(fs.Path, e.Root.Path)
-	return base
+	base, _ := filepath.Rel(e.Root.Path, fs.Path)
+	return "/" + base
 }
 
-func LoadEnv(root *vfs.DirFS) (*Env, error) {
-	var env = Env{Root: root, Templates: map[string]*Template{}}
-	var manifest EnvManifest
+func (e *Env) GenerateMetadataSet(raw MetadataSet) (MetadataSet, error) {
+	metadataSet := MetadataSet{}
 
-	err := util.UnmarshalYAMLFile(root, "/env.yaml", &manifest)
+	for key, data := range raw {
+		canonical, ok := e.CanonicalNames[key]
+		if ok {
+			metadataSet[canonical] = data
+		} else {
+			metadataSet[key] = data
+		}
+	}
+
+	return metadataSet, nil
+}
+
+func (e *Env) LoadTemplateFile(path, std string) (*template.Template, error) {
+	getFuncMap, ok := Versions[std]
+	if !ok {
+		return nil, &UndefinedStdError{Std: std}
+	}
+
+	t, err := template.New(filepath.Base(path)).Funcs(getFuncMap(nil)).ParseFiles(path)
 	if err != nil {
 		return nil, err
 	}
 
-	env.IgnoreGlobs = make([]*regexp.Regexp, len(manifest.Ignore))
-	for i, globForm := range manifest.Ignore {
-		glob, err := regexp.Compile(globForm)
-		if err != nil {
-			return nil, err
-		}
-		env.IgnoreGlobs[i] = glob
-	}
+	e.CachedTemplates[path] = t
 
-	for templateName, templatePath := range manifest.Use {
-		sub, err := root.Chroot(templatePath)
-		if err != nil {
-			return nil, err
-		}
-
-		t, err := LoadTemplate(sub)
-		if err != nil {
-			return nil, err
-		}
-
-		env.Templates[templateName] = t
-		env.CanonicalNames[t.CanonicalName] = templateName
-	}
-
-	return &env, nil
+	return t, nil
 }
 
-func ParseTemplatePair(pair string) (string, string) {
-	split := strings.Split(pair, ":")
-	if len(split) == 2 {
-		return split[0], split[1]
+func (e *Env) GetTemplateFile(path, std string) (*template.Template, error) {
+	t, ok := e.CachedTemplates[path]
+	if !ok {
+		return e.LoadTemplateFile(path, std)
+	}
+	return t, nil
+}
+
+func (e *Env) GetTemplateFromAlias(alias string) (*Template, error) {
+
+	// Is alias.
+	if canonical, ok := e.CanonicalNames[alias]; ok {
+		return e.Templates[canonical], nil
 	}
 
-	return pair, "main"
+	// Is canonical.
+	if t, ok := e.Templates[alias]; ok {
+		return t, nil
+	}
+
+	// Not found.
+	return nil, &TemplateUndefinedError{Name: alias}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
+	"mime"
 )
 
 func Markdown(content []byte) (string, error) {
@@ -20,5 +21,8 @@ func Markdown(content []byte) (string, error) {
 }
 
 func init() {
-	Renderers["md"] = Markdown
+	Renderers["text/markdown"] = Markdown
+
+	mime.AddExtensionType(".md", "text/markdown")
+	mime.AddExtensionType(".markdown", "text/markdown")
 }

@@ -15,7 +15,7 @@ type Stage struct {
 
 func (s *Stage) Run() (*StageReport, error) {
 	var (
-		jobReports, jobFailures collection.SyncVector[JobReport]
+		jobReports, jobFailures collection.SyncVector[*JobReport]
 
 		wg sync.WaitGroup
 	)
@@ -27,7 +27,7 @@ func (s *Stage) Run() (*StageReport, error) {
 
 			report, err := job.Run()
 			if err != nil {
-				jobFailures.Push(JobReport{
+				jobFailures.Push(&JobReport{
 					Job:     job,
 					Failure: err,
 				})

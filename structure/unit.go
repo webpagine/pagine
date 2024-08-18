@@ -12,69 +12,63 @@ import (
 )
 
 type UnitReport struct {
+	Unit *Unit
+
 	Error          error
 	TemplateErrors []error
 }
 
-type UnitManifest struct {
-	Units []struct {
-		Template string         `yaml:"template"`
-		Output   string         `yaml:"output"`
-		Define   map[string]any `yaml:"define"`
-	} `yaml:"unit"`
-}
-
 type Unit struct {
-	Output   string
-	Template string
-	Report   UnitReport
+	Output, TemplateName, TemplateKey string
+
+	Define map[string]any
+
+	Report UnitReport
 }
 
-func (u *Unit) Generate(env *Env, root, dest *vfs.DirFS, dataSet MetadataSet, define map[string]any) ([]error, error) {
+func (u *Unit) Generate(env *Env, root, dest *vfs.DirFS, dataSet MetadataSet) ([]error, error) {
 
-	var dataMap collection.Map[string, any]
+	var (
+		dataMap collection.Map[string, any]
+		errors  collection.SyncVector[error]
+	)
 
-	templateName, templateKey := ParseTemplatePair(u.Template)
-
-	// Get matched template from `env`.
-	t, ok := env.Templates[templateName]
-	if !ok {
-		return nil, &TemplateUndefinedError{Name: templateName}
+	t, err := env.GetTemplateFromAlias(u.TemplateName)
+	if err != nil {
+		return nil, err
 	}
 
 	base := env.BaseOf(root)
 
 	// Inherit.
-	dataMap.Raw = maps.Clone(dataSet[templateName])
+	dataMap.Raw = maps.Clone(dataSet[t.CanonicalName])
 
 	// Override.
-	dataMap.MergeRaw(define)
+	dataMap.MergeRaw(u.Define)
 
 	// Global template base directory.
 	templateBase := env.BaseOf(t.Root)
 
-	funcMap, errors, err := getFuncMap(
-		map[string]struct{}{},
-		templateBase,
-		env,
-		root,
-		dest,
-		dataMap.Raw,
-		dataSet,
-	)
-	if err != nil {
-		return nil, err
-	}
+	funcMap := t.GetFuncMap(&Context{
+		AppliedTemplates: map[string]struct{}{},
+		TemplateBase:     templateBase,
+		Env:              env,
+		Root:             root,
+		Dest:             dest,
+		Data:             dataMap.Raw,
+		DataSet:          dataSet,
+		Errors:           &errors,
+	})
 
 	f, err := dest.CreateFile(filepath.Join(base, u.Output))
 	if err != nil {
 		return nil, err
 	}
 
-	err = t.ExecuteTemplate(f, funcMap, templateKey, dataMap.Raw)
+	err = t.ExecuteTemplate(f, funcMap, u.TemplateKey, dataMap.Raw)
 	if err != nil {
 		return nil, err
 	}
 
-	return errors.Raw, nil
+	return errors.It.Raw, nil
 }

@@ -15,11 +15,11 @@ type JobReport struct {
 
 	Failure error
 
-	CommandReports []CommandReport
+	CommandReports []*CommandReport
 }
 
 type StageReport struct {
 	Stage *Stage
 
-	JobReports []JobReport
+	JobReports []*JobReport
 }

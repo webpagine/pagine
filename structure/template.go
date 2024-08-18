@@ -5,23 +5,11 @@
 package structure
 
 import (
-	"github.com/webpagine/pagine/v2/util"
+	"bytes"
 	"github.com/webpagine/pagine/v2/vfs"
 	"io"
 	"text/template"
 )
-
-type TemplateManifest struct {
-	Manifest struct {
-		Canonical string   `yaml:"canonical"`
-		Patterns  []string `yaml:"patterns"`
-	} `yaml:"manifest"`
-
-	Templates []struct {
-		Name   string `yaml:"name"`
-		Export string `yaml:"export"`
-	} `yaml:"templates"`
-}
 
 type Template struct {
 	Root *vfs.DirFS
@@ -31,12 +19,13 @@ type Template struct {
 	Templates map[string]string
 
 	GoTemplate *template.Template
+	GetFuncMap GetFuncMap
 }
 
 func (t *Template) ExecuteTemplate(wr io.Writer, funcs map[string]any, key string, data any) error {
 	name, ok := t.Templates[key]
 	if !ok {
-		return &TemplateNotFoundError{Template: t, Want: key}
+		return &TemplateNotFoundError{Template: t, Key: key}
 	}
 
 	goTemplate, err := t.GoTemplate.Clone()
@@ -46,30 +35,12 @@ func (t *Template) ExecuteTemplate(wr io.Writer, funcs map[string]any, key strin
 
 	return goTemplate.Funcs(funcs).ExecuteTemplate(wr, name, data)
 }
-
-func LoadTemplate(root *vfs.DirFS) (*Template, error) {
-
-	var manifest TemplateManifest
-
-	err := util.UnmarshalYAMLFile(root, "/manifest.yaml", &manifest)
+func executeTemplate(t *Template, key string, funcMap, data map[string]any) (string, error) {
+	b := bytes.NewBuffer(nil)
+	err := t.ExecuteTemplate(b, funcMap, key, data)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	exported := map[string]string{}
-	for _, t := range manifest.Templates {
-		exported[t.Name] = t.Export
-	}
-
-	goTemplate, err := template.New(manifest.Manifest.Canonical).Funcs(emptyFuncMap).ParseFS(root, manifest.Manifest.Patterns...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Template{
-		Root:          root,
-		CanonicalName: manifest.Manifest.Canonical,
-		Templates:     exported,
-		GoTemplate:    goTemplate,
-	}, nil
+	return b.String(), nil
 }

@@ -1,6 +1,6 @@
 module github.com/webpagine/pagine/v2
 
-go 1.22
+go 1.22.2
 
 require (
 	github.com/bytesparadise/libasciidoc v0.8.0
@@ -9,6 +9,7 @@ require (
 	github.com/gomarkdown/markdown v0.0.0-20240419095408-642f0ee99ae2
 	github.com/gorilla/websocket v1.5.3
 	github.com/jellyterra/collection-go v0.0.3
+	github.com/jellyterra/go-fscopy v0.0.1
 )
 
 require (

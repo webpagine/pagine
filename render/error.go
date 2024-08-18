@@ -4,12 +4,26 @@
 
 package render
 
-import "fmt"
-
-type NotFoundError struct {
-	Path string
+type UnknownMimeTypeError struct {
+	MimeType string
 }
 
-func (e *NotFoundError) Error() string {
-	return fmt.Sprint("no renderer found for the content type: ", e.Path)
+func (e *UnknownMimeTypeError) Error() string {
+	return "unknown mime type: " + e.MimeType
+}
+
+type UnknownExtError struct {
+	Mime, Ext string
+}
+
+func (e *UnknownExtError) Error() string {
+	return "unknown ext: " + e.Ext
+}
+
+type NoRenderFoundError struct {
+	MimeType string
+}
+
+func (e *NoRenderFoundError) Error() string {
+	return "no render found for mime type: " + e.MimeType
 }

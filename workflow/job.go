@@ -6,35 +6,28 @@ package workflow
 
 import (
 	"github.com/jellyterra/collection-go"
-	"sync"
 )
 
 type Job struct {
+	Title string
+
 	Commands []*Command
 }
 
-func (j *Job) Run() (JobReport, error) {
+func (j *Job) Run() (*JobReport, error) {
 	var (
-		reports collection.SyncVector[CommandReport]
-
-		wg sync.WaitGroup
+		reports collection.Vector[*CommandReport]
 	)
 
 	for _, cmd := range j.Commands {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			reports.Push(CommandReport{
-				Command: cmd,
-				Err:     cmd.Execute(),
-			})
-		}()
+		reports.Push(&CommandReport{
+			Command: cmd,
+			Err:     cmd.Execute(),
+		})
 	}
 
-	wg.Wait()
-
-	return JobReport{
+	return &JobReport{
 		Job:            j,
-		CommandReports: reports.It.Raw,
+		CommandReports: reports.Raw,
 	}, nil
 }

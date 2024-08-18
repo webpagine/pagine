@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"github.com/bytesparadise/libasciidoc"
 	"github.com/bytesparadise/libasciidoc/pkg/configuration"
+	"mime"
 )
 
 func Asciidoc(content []byte) (string, error) {
@@ -20,4 +21,11 @@ func Asciidoc(content []byte) (string, error) {
 	}
 
 	return b.String(), nil
+}
+
+func init() {
+	Renderers["text/asciidoc"] = Asciidoc
+
+	mime.AddExtensionType(".adoc", "text/asciidoc")
+	mime.AddExtensionType(".asciidoc", "text/asciidoc")
 }
