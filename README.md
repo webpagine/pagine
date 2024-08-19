@@ -1,7 +1,7 @@
 
 <img src="https://github.com/jellyterra/artworks/raw/master/logo/pagine_v2.svg" height="140" alt="Pagine logo" />
 
-# Pagine v2.2
+# Pagine v2.2.0-alpha-50a1f7a-20240819
 
 Pagine is an high-performance website constructor that makes full use of multicore hardware.
 
@@ -18,8 +18,9 @@ Build jobs can be completed very fast.
 
 Supported rich text formats:
 
-- [Markdown](https://markdownguide.org) with [MathJax](https://www.mathjax.org) support
 - [Asciidoc](https://asciidoc.org)
+- [Markdown](https://markdownguide.org)
+- [MathJax](https://www.mathjax.org) support provided in [Documentor](https://github.com/webpagine/documentor)
 
 ## Install
 
@@ -39,8 +40,8 @@ $ go install github.com/webpagine/pagine/v2/cmd/pagine@latest
 ## Usage
 
 Usage of pagine:
-- `-public` string 
-  - Location of public directory. (default `/tmp/$(basename $PWD).public`) 
+- `-public` string
+  - Location of public directory. (default `/tmp/$(basename $PWD).public`)
 - `-root` string
   - Site root. (default `$PWD`)
 - `-serve` string
@@ -85,7 +86,7 @@ Manifest of one template looks like:
 manifest:
   canonical: "com.symboltics.pagine.genesis" # Canonical name
   patterns:
-    - "/*html"                    # Matched files will be added as template file.
+    - "/*html"                               # Matched files will be added as template file.
 
 templates:
   - name: "page"        # Export as name `page`
@@ -102,13 +103,13 @@ Example:  `page.html`
 <html lang="{{ .lang }}">
 <head>
   <title>{{ .title }}</title>
-  <link rel="stylesheet" href="{{ (getAttr).templateBase }}/css/base.css" />
+  <link rel="stylesheet" href="{{ api.Attr.templateBase }}/css/base.css" />
 </head>
 <body>
-{{ template "header.html" .header }}
-<main>{{ render .content }}</main>
+{{ template "header.html" . }}
+<main>{{ render.ByFileExtName .content }}</main>
 </body>
-{{ template "footer.html" .footer }}
+{{ template "footer.html" . }}
 </html>
 ```
 
@@ -117,12 +118,12 @@ Example:  `page.html`
 "Environment" is the configuration of the details of the entire process.
 
 ```yaml
-ignore:
-  - "/.git*" # Pattern matching. Matched files will not be **copied** to the public/destination.
+ignore: # Pattern matching. Matched files will not be **copied** to the public/destination.
+  - "/.git*"
 
-use:
+use: # Load and set alias for the template.
   genesis: "/templates/genesis"
-  another: "/templates/something_else" # Load and set alias for the template.
+  documentor: "/templates/documentor"
 ```
 
 Installing templates via Git submodule is recommended. Such as:
@@ -160,13 +161,15 @@ genesis:
 Example: `/unit.yaml`
 ```yaml
 unit:
-  - template: "genesis:page" # Which template to use.
+  - template: "genesis"      # Which template to use.
+    template_key: "page"     # Which the key refers to.
     output: "/index.html"    # Where to save the result.
     define:
       title: "Pagine"        # Unit-specified metadata.
       content: "README.md"
 
-  - template: "genesis:page"
+  - template: "genesis"
+    template_key: "page"
     output: "/404.html"
     define:
       title: "Page not found"
@@ -187,55 +190,42 @@ unit:
 
 ### Engine API
 
-| Func      | Description                                                                                      |
-|-----------|--------------------------------------------------------------------------------------------------|
-| `getEnv`  | Get environment information for debug use.                                                       | 
-| `getAttr` | Get meta information in the form of map about units, hierarchy and templates provided by engine. |
+| Func            |                                                        | Description                                                                                      |
+|-----------------|--------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `api.Attr`      |                                                        | Get meta information in the form of map about units, hierarchy and templates provided by engine. |
+| `api.Apply`     | templateName, templateKey: String, data map[string]Any | Invoke a template.                                                                               |
+| `api.ApplyFile` | apiVer, path: String, data map[string]any              | Invoke single template file.                                                                     | 
+| `This`          |                                                        | It returns the root node of metadata of the template.                                            |
 
-| Environment | Description                                 |
-|-------------|---------------------------------------------|
-| `isServing` | Return true if Pagine is running as server. |
-
-| Attribution    | Description                                     |
+| api.Attr.      | Description                                     |
 |----------------|-------------------------------------------------|
-| `unitBase`     | Unit's level's base dir path.                   |
-| `templateBase` | It tells the template where it has been stored. | 
-
-| Func          | Description                                           |
-|---------------|-------------------------------------------------------|
-| `getMetadata` | It returns the root node of metadata of the template. |
+| `isServing`    | True if Pagine is running as server.            |
+| `templateBase` | It tells the template where it has been stored. |
+| `unitBase`     | Unit's level's base dir path.                   | 
 
 > [!TIP]
-> `(getEnv).isServing` can be used to enable some debug code in templates such as page realtime update.
+> `api.Attr.isServing` can be used to enable some debug code in templates such as page realtime update.
 
-### Data processing
+### String processing
 
-| Func         | Args                        | Result |
-|--------------|-----------------------------|--------|
-| `hasPrefix`  | str: String, prefix: String | Bool   |
-| `trimPrefix` | str: String, prefix: String | String |
+| Func                 | Args                        | Result |
+|----------------------|-----------------------------|--------|
+| `strings.HasPrefix`  | str: String, prefix: String | Bool   |
+| `strings.TrimPrefix` | str: String, prefix: String | String |
 
-| Func             | Args                                            | Result                                           | Description                                                                       |
-|------------------|-------------------------------------------------|--------------------------------------------------|-----------------------------------------------------------------------------------|
-| `divideSliceByN` | slice: []Any, n: Int                            | [][]Any                                          | Divide a slice into *len(slice) / N* slices                                       |
-| `mapAsSlice`     | map: map[String]Any, **key**, **value**: String | []map[String]{ **key**: String, **value**: Any } | Convert map to a slice of map that contains two keys named **key** and **value**. |
-
-### Content
+### Content rendering
 
 Path starts from where the unit is.
 
-| Func             | Args                              | Description                             |
-|------------------|-----------------------------------|-----------------------------------------|
-| `apply`          | path: String, data map[string]Any | Invoke a template.                      |
-| `embed`          | path: String                      | Embed file raw content.                 |
-| `render`         | path: String                      | Invoke renderer by file extension name. |
-| `renderAsciidoc` | path: String                      | Render and embed Asciidoc content.      |
-| `renderMarkdown` | path: String                      | Render and embed Markdown content.      |
+| Func                    | Args                   | Description                                         |
+|-------------------------|------------------------|-----------------------------------------------------|
+| `render.FileByExtName`  | path: String           | Query MIME type by file extension name then render. |
+| `render.FileByMimeType` | mimeType, path: String | Render file content by given MIME type.             |
 
-| Format   | File Extension Name |
-|----------|---------------------|
-| Markdown | `md`                |
-| Asciidoc | `adoc`              |
+| Format   | MIME Type       | File Extension Name |
+|----------|-----------------|---------------------|
+| Asciidoc | `text/asciidoc` | `adoc`, `asciidoc`  |
+| Markdown | `text/markdown` | `md`, `markdown`    |
 
 ## Deploy
 
