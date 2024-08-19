@@ -49,8 +49,8 @@ github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpO
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/jellyterra/collection-go v0.0.3 h1:oQHzlZsXtMv/J685hgxYFU1zI2W+kakVMt2hm5eHkGk=
 github.com/jellyterra/collection-go v0.0.3/go.mod h1:oKzk4H4F2OEoKwNnbVV01P/QacuP7liUNgkmK0YtXj4=
-github.com/jellyterra/go-fscopy v0.0.1 h1:PNlB+OJEg35w40Co8W43IHoEKsWmGYKi2QTJ6BfWISY=
-github.com/jellyterra/go-fscopy v0.0.1/go.mod h1:tw4Y5wl30vkx9/9gdpyeTUADixKP8Za8jZ/pTMvuumw=
+github.com/jellyterra/go-fscopy v0.0.2 h1:qE0hI6Y2n1NG1KsHz4z6Dw4WcbuFmEUIMigkzYtflBM=
+github.com/jellyterra/go-fscopy v0.0.2/go.mod h1:cXuBoeYuB84U7LnQysuqsfc3tH092DsItM1OAps+sjI=
 github.com/mna/pigeon v1.1.0 h1:EjlvVbkGnNGemf8OrjeJX0nH8orujY/HkJgzJtd7kxc=
 github.com/mna/pigeon v1.1.0/go.mod h1:rkFeDZ0gc+YbnrXPw0q2RlI0QRuKBBPu67fgYIyGRNg=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
@@ -107,8 +107,8 @@ golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210112080510-489259a85091/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210423082822-04245dca01da/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.4.0 h1:Zr2JFtRQNX3BCZ8YtxRE9hNJYC8J6I1MVbMg6owUp18=
-golang.org/x/sys v0.4.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.24.0 h1:Twjiwq9dn6R1fQcyiK+wQyHWfaz/BJB+YIpzU/Cv3Xg=
+golang.org/x/sys v0.24.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.3/go.mod h1:5Zoc/QRtKVWzQhOtBMvqHzDpF6irO9z98xDceosuGiQ=
