@@ -11,7 +11,6 @@ import (
 	"github.com/webpagine/pagine/v2/structure"
 	"github.com/webpagine/pagine/v2/vfs"
 	"os"
-	"sync"
 )
 
 func GenerateAll(root, dest *vfs.DirFS, isServing bool) error {
@@ -43,11 +42,7 @@ func GenerateAll(root, dest *vfs.DirFS, isServing bool) error {
 		return err
 	}
 
-	var wg sync.WaitGroup
-
-	ExecuteLevels(&wg, env, dest, level)
-
-	wg.Wait()
+	ExecuteLevels(env, dest, level)
 
 	fmt.Println("Generation complete.")
 

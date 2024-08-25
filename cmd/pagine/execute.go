@@ -33,14 +33,18 @@ func ExecuteLevel(env *structure.Env, dest *vfs.DirFS, level *structure.Level) {
 	}
 }
 
-func ExecuteLevels(wg *sync.WaitGroup, env *structure.Env, dest *vfs.DirFS, levels ...*structure.Level) {
+func ExecuteLevels(env *structure.Env, dest *vfs.DirFS, levels ...*structure.Level) {
+	var wg sync.WaitGroup
+
 	for _, level := range levels {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 
-			go ExecuteLevels(wg, env, dest, level.Levels...)
+			go ExecuteLevels(env, dest, level.Levels...)
 			ExecuteLevel(env, dest, level)
 		}()
 	}
+
+	wg.Wait()
 }
