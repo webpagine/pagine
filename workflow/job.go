@@ -20,10 +20,7 @@ func (j *Job) Run() (*JobReport, error) {
 	)
 
 	for _, cmd := range j.Commands {
-		reports.Push(&CommandReport{
-			Command: cmd,
-			Err:     cmd.Execute(),
-		})
+		reports.Push(cmd.Execute())
 	}
 
 	return &JobReport{

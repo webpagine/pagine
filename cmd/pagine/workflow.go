@@ -6,26 +6,95 @@ package main
 
 import (
 	"fmt"
+	"github.com/jellyterra/collection-go"
 	"github.com/webpagine/pagine/v2/config"
 	"github.com/webpagine/pagine/v2/vfs"
+	"github.com/webpagine/pagine/v2/workflow"
+	"io/fs"
+	"sync"
 )
 
+func CollectAndRunWorkflows(root, dest *vfs.DirFS) error {
+	bases, err := CollectWorkflows(root, dest)
+	if err != nil {
+		return err
+	}
+
+	if len(bases) == 0 {
+		return nil
+	}
+
+	var wg sync.WaitGroup
+
+	for _, base := range bases {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			err := RunWorkflow(base)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}()
+	}
+	wg.Wait()
+
+	fmt.Println("Workflows complete.")
+
+	return nil
+}
+
+func CollectWorkflows(root, dest *vfs.DirFS) (dirs []*vfs.DirFS, _ error) {
+	return dirs, fs.WalkDir(root, "/", func(path string, _ fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		_, err = root.Stat(path + "/workflow.yaml")
+		if err != nil {
+			return nil // Skip.
+		}
+
+		sub, err := dest.Chroot(path)
+		if err != nil {
+			return err
+		}
+
+		dirs = append(dirs, sub)
+
+		return nil
+	})
+}
+
 func RunWorkflow(root *vfs.DirFS) error {
+	var stageReports collection.Vector[*workflow.StageReport]
+
 	wf, err := config.LoadWorkflow(root)
 	if err != nil {
 		return err
 	}
 
-	for stageIndex, stage := range wf.Stages {
-		report, err := stage.Run()
+	for _, stage := range wf.Stages {
+		stageReport, err := stage.Run()
 		if err != nil {
 			return err
 		}
 
-		for _, jobReport := range report.JobReports {
+		stageReports.Push(stageReport)
+	}
+
+	for stageIndex, stageReport := range stageReports.Raw {
+		for _, jobReport := range stageReport.JobReports {
 			for _, cmdReport := range jobReport.CommandReports {
-				if cmdReport.Err != nil {
-					fmt.Printf("Stage %d - Job failed \"%s\": %e\n", stageIndex, jobReport.Job.Title, cmdReport.Err)
+
+				switch {
+				case cmdReport.Err != nil:
+					fmt.Printf("\n===== Stage %d - %s: %s\n", stageIndex, jobReport.Job.Title, cmdReport.Err.Error())
+				case cmdReport.Output.Len() == 0:
+				default:
+					fmt.Printf("\n===== Stage %d - %s\n", stageIndex, jobReport.Job.Title)
+					fmt.Print(cmdReport.Output.String())
 				}
 			}
 		}

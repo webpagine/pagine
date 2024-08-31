@@ -85,6 +85,7 @@ func generateTscJob(root *vfs.DirFS, m map[string]any) (*workflow.Job, error) {
 	cmd, err := tsc.BuildTS(root, tscJob.Path)
 
 	return &workflow.Job{
+		Title:    m["title"].(string),
 		Commands: []*workflow.Command{cmd},
 	}, nil
 }

@@ -4,13 +4,25 @@
 
 package workflow
 
-import "os/exec"
+import (
+	"bytes"
+	"os/exec"
+)
 
 type Command struct {
 	Exec string   `yaml:"exec"`
 	Args []string `yaml:"args"`
 }
 
-func (c *Command) Execute() error {
-	return exec.Command(c.Exec, c.Args...).Run()
+func (c *Command) Execute() *CommandReport {
+	output := bytes.NewBuffer(nil)
+
+	cmd := exec.Command(c.Exec, c.Args...)
+	cmd.Stdout, cmd.Stderr = output, output
+
+	return &CommandReport{
+		Command: c,
+		Err:     cmd.Run(),
+		Output:  output,
+	}
 }

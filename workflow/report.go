@@ -4,10 +4,14 @@
 
 package workflow
 
+import "bytes"
+
 type CommandReport struct {
 	Command *Command
 
 	Err error
+
+	Output *bytes.Buffer
 }
 
 type JobReport struct {

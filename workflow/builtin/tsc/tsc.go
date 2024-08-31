@@ -7,11 +7,12 @@ package tsc
 import (
 	"github.com/webpagine/pagine/v2/vfs"
 	"github.com/webpagine/pagine/v2/workflow"
+	"path/filepath"
 )
 
 func BuildTS(fs *vfs.DirFS, path string) (*workflow.Command, error) {
 	return &workflow.Command{
 		Exec: "/bin/tsc",
-		Args: []string{"--project", fs.Path + "/tsconfig.json"},
+		Args: []string{"--project", filepath.Join(fs.Path, path)},
 	}, nil
 }

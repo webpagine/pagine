@@ -10,6 +10,7 @@ import (
 	"github.com/webpagine/pagine/v2/config"
 	"github.com/webpagine/pagine/v2/structure"
 	"github.com/webpagine/pagine/v2/vfs"
+	"io/fs"
 	"os"
 )
 
@@ -43,6 +44,18 @@ func GenerateAll(root, dest *vfs.DirFS, isServing bool) error {
 	}
 
 	ExecuteLevels(env, dest, level)
+
+	err = fs.WalkDir(dest, "/", func(path string, d fs.DirEntry, err error) error {
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	err = CollectAndRunWorkflows(root, dest)
+	if err != nil {
+		return err
+	}
 
 	fmt.Println("Generation complete.")
 
