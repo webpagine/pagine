@@ -1,7 +1,7 @@
 
 <img src="https://github.com/jellyterra/artworks/raw/master/logo/pagine_v2.svg" height="140" alt="Pagine logo" />
 
-# Pagine v2.2.0-alpha-50a1f7a-20240819
+# Pagine v2.2.0
 
 Pagine is an high-performance website constructor that makes full use of multicore hardware.
 
@@ -14,7 +14,9 @@ Build jobs can be completed very fast.
 - Manage templates and assets via Git. Every template can be distributed and used without modification.
 - In-template builtin functions
 - Interact with Pagine in templates.
-- Update on file change while running as HTTP server.
+- Multi-stage workflow.
+
+As server: update web content on file change.
 
 Supported rich text formats:
 
@@ -31,7 +33,7 @@ Find the executable that matches your OS and architecture in [releases](https://
 ### Build from source
 
 ```shell
-$ go install github.com/webpagine/pagine/v2/cmd/pagine@latest
+$ go install github.com/webpagine/pagine/v2/cmd/pagine@v2.2.0
 ```
 
 > [!TIP]
@@ -176,6 +178,44 @@ unit:
       content: "404.md"
 ```
 
+## Multi-stage Workflow
+
+All paths are based on the directory where the `workflow.yaml` is located.
+
+### Workflow
+
+Workflows are executed in parallel.
+
+Example: `workflow.yaml`
+```yaml
+stage:
+  - job:
+      - type: "tsc/v1"
+        title: "Build TypeScript"
+        path: "/script/"
+```
+
+### Stage
+
+Stages are executed in order.
+Each stage contains a set of jobs.
+
+### Job
+
+Jobs are executed in parallel.
+
+## Builtin Job Types
+
+### TypeScript compiler (tsc)
+
+```yaml
+type: "tsc/v1"
+title: "Build TypeScript"
+path: "/script/"
+```
+
+Make sure `tsc` had been installed on target machine.
+
 ## Builtin functions
 
 ### Arithmetic
@@ -239,7 +279,57 @@ Upload `public` to your server.
 
 ### Deploy to GitHub Pages via GitHub Actions (recommended)
 
-GitHub Actions workflow configuration can be found in [Get Started](https://github.com/webpagine/get-started) repository.
+GitHub Actions workflow file content: `.github/workflows/pagine.yml`
+```yaml
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Pagine
+        run: go install github.com/webpagine/pagine/v2/cmd/pagine@v2.2.0
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v4
+
+      - name: Build with Pagine
+        run: ~/go/bin/pagine --public ./public/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
 
 ## FAQ
 
