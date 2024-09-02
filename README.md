@@ -1,7 +1,7 @@
 
 <img src="https://github.com/jellyterra/artworks/raw/master/logo/pagine_v2.svg" height="140" alt="Pagine logo" />
 
-# Pagine v2.2.0
+# Pagine v2.4.0
 
 Pagine is an high-performance website constructor that makes full use of multicore hardware.
 
@@ -33,7 +33,7 @@ Find the executable that matches your OS and architecture in [releases](https://
 ### Build from source
 
 ```shell
-$ go install github.com/webpagine/pagine/v2/cmd/pagine@v2.2.0
+$ go install github.com/webpagine/pagine/v2/cmd/pagine@v2.4.0
 ```
 
 > [!TIP]
@@ -275,7 +275,7 @@ Path starts from where the unit is.
 $ pagine --public ../public
 ```
 
-Upload `public` to your server.
+Upload `../public` to your server.
 
 ### Deploy to GitHub Pages via GitHub Actions (recommended)
 
@@ -306,7 +306,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Pagine
-        run: go install github.com/webpagine/pagine/v2/cmd/pagine@v2.2.0
+        run: go install github.com/webpagine/pagine/v2/cmd/pagine@v2.4.0
 
       - name: Checkout
         uses: actions/checkout@v4
