@@ -305,6 +305,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Install TypeScript Compiler
+        run: sudo apt install node-typescript -y
+
       - name: Install Pagine
         run: go install github.com/webpagine/pagine/v2/cmd/pagine@v2.4.0
 
@@ -319,12 +322,12 @@ jobs:
         uses: actions/configure-pages@v4
 
       - name: Build with Pagine
-        run: ~/go/bin/pagine --public ./public/
+        run: ~/go/bin/pagine --public ../public/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./public/
+          path: ../public/
 
       - name: Deploy to GitHub Pages
         id: deployment
