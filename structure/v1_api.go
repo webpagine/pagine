@@ -73,6 +73,22 @@ func (c *v1Api) Apply(templateName, templateKey string, data any) any {
 func (c *v1Api) ApplyFile(std, path string, data map[string]any) string {
 	return c.Wrap(func() (_ string, err error) {
 
+		getFuncMap, ok := Versions[std]
+		if !ok {
+			return "", &UndefinedStdError{Std: std}
+		}
+
+		funcMap := getFuncMap(&Context{
+			AppliedTemplates: c.AppliedTemplates,
+			TemplateBase:     filepath.Base(path),
+			Env:              c.Env,
+			Root:             c.Root,
+			Dest:             c.Dest,
+			Data:             data,
+			DataSet:          nil,
+			Errors:           c.Errors,
+		})
+
 		absolutePath := filepath.Join(c.Root.Path, path)
 
 		t, err := c.Env.GetTemplateFile(absolutePath, std)
@@ -82,7 +98,7 @@ func (c *v1Api) ApplyFile(std, path string, data map[string]any) string {
 
 		buf := bytes.NewBuffer(nil)
 
-		err = t.Execute(buf, data)
+		err = t.Funcs(funcMap).Execute(buf, data)
 		if err != nil {
 			return "", err
 		}
