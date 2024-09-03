@@ -1,7 +1,7 @@
 
 <img src="https://github.com/jellyterra/artworks/raw/master/logo/pagine_v2.svg" height="140" alt="Pagine logo" />
 
-# Pagine v2.4.0
+# Pagine v2.4.1
 
 Pagine is an high-performance website constructor that makes full use of multicore hardware.
 
@@ -33,7 +33,7 @@ Find the executable that matches your OS and architecture in [releases](https://
 ### Build from source
 
 ```shell
-$ go install github.com/webpagine/pagine/v2/cmd/pagine@v2.4.0
+$ go install github.com/webpagine/pagine/v2/cmd/pagine@v2.4.1
 ```
 
 > [!TIP]
@@ -246,12 +246,17 @@ Make sure `tsc` had been installed on target machine.
 > [!TIP]
 > `api.Attr.isServing` can be used to enable some debug code in templates such as page realtime update.
 
+### Path processing.
+
+For more detail, check Go source file: `structure/v1_path.go`
+
+Example: `{{ path.Base .path }}`
+
 ### String processing
 
-| Func                 | Args                        | Result |
-|----------------------|-----------------------------|--------|
-| `strings.HasPrefix`  | str: String, prefix: String | Bool   |
-| `strings.TrimPrefix` | str: String, prefix: String | String |
+For more detail, check Go source file: `structure/v1_strings.go`
+
+Example: `{{ strings.HasSuffix .logo.src ".svg" }}`
 
 ### Content rendering
 
@@ -309,7 +314,7 @@ jobs:
         run: sudo apt install node-typescript -y
 
       - name: Install Pagine
-        run: go install github.com/webpagine/pagine/v2/cmd/pagine@v2.4.0
+        run: go install github.com/webpagine/pagine/v2/cmd/pagine@v2.4.1
 
       - name: Checkout
         uses: actions/checkout@v4
