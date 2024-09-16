@@ -22,6 +22,7 @@ func (c *v1Api) Attr() map[string]any {
 		return c.attr
 	}
 	c.attr = map[string]any{
+		"deployTime":   c.Env.DeployTime,
 		"isServing":    c.Env.IsServing,
 		"unitBase":     c.Env.BaseOf(c.Root),
 		"templateBase": c.TemplateBase,

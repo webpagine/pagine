@@ -22,6 +22,8 @@ type Env struct {
 
 	IsServing bool
 
+	DeployTime string
+
 	CachedTemplates map[string]*template.Template
 }
 

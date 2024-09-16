@@ -12,6 +12,7 @@ import (
 	"github.com/webpagine/pagine/v2/vfs"
 	"io/fs"
 	"os"
+	"time"
 )
 
 func GenerateAll(root, dest *vfs.DirFS, isServing bool) error {
@@ -22,6 +23,7 @@ func GenerateAll(root, dest *vfs.DirFS, isServing bool) error {
 		return err
 	}
 
+	env.DeployTime = time.Now().UTC().Format("20060102150405")
 	env.IsServing = isServing
 
 	err = os.RemoveAll(dest.Path)
