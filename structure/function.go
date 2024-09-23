@@ -5,7 +5,6 @@
 package structure
 
 import (
-	"github.com/jellyterra/collection-go"
 	"github.com/webpagine/pagine/v2/vfs"
 )
 
@@ -25,18 +24,12 @@ type Context struct {
 	Root, Dest *vfs.DirFS
 	Data       map[string]any
 	DataSet    MetadataSet
-
-	Errors *collection.SyncVector[error]
 }
 
-func (c *Context) Wrap(f func() (string, error)) string {
-	str, err := f()
+func panicOnError(err error) {
 	if err != nil {
-		c.Errors.Push(err)
-		return ""
+		panic(err)
 	}
-
-	return str
 }
 
 var Versions = map[string]GetFuncMap{}

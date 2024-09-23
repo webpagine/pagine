@@ -57,7 +57,6 @@ func (u *Unit) Generate(env *Env, root, dest *vfs.DirFS, dataSet MetadataSet) ([
 		Dest:             dest,
 		Data:             dataMap.Raw,
 		DataSet:          dataSet,
-		Errors:           &errors,
 	})
 
 	f, err := dest.CreateFile(filepath.Join(base, u.Output))

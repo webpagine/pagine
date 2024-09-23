@@ -15,34 +15,27 @@ type v1Render struct {
 }
 
 func (c *v1Render) FileByMimeType(mimeType, path string) string {
-	return c.Wrap(func() (string, error) {
-		renderer, err := render.ByMimeType(mimeType)
-		if err != nil {
-			return "", err
-		}
+	renderer, err := render.ByMimeType(mimeType)
+	panicOnError(err)
 
-		b, err := os.ReadFile(filepath.Join(c.Root.Path, path))
-		if err != nil {
-			return "", err
-		}
+	b, err := os.ReadFile(filepath.Join(c.Root.Path, path))
+	panicOnError(err)
 
-		return renderer(b)
-	})
+	result, err := renderer(b)
+	panicOnError(err)
+
+	return result
 }
 
 func (c *v1Render) FileByExtName(path string) string {
-	return c.Wrap(func() (string, error) {
+	renderer, err := render.ByExtName(path)
+	panicOnError(err)
 
-		renderer, err := render.ByExtName(path)
-		if err != nil {
-			return "", err
-		}
+	b, err := os.ReadFile(filepath.Join(c.Root.Path, path))
+	panicOnError(err)
 
-		b, err := os.ReadFile(filepath.Join(c.Root.Path, path))
-		if err != nil {
-			return "", err
-		}
+	result, err := renderer(b)
+	panicOnError(err)
 
-		return renderer(b)
-	})
+	return result
 }
