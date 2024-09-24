@@ -9,7 +9,9 @@ import (
 	"github.com/jellyterra/collection-go"
 	"github.com/webpagine/pagine/v2/vfs"
 	"github.com/webpagine/pagine/v2/workflow"
-	"github.com/webpagine/pagine/v2/workflow/builtin/tsc"
+	"github.com/webpagine/pagine/v2/workflow/builtin"
+	"io/fs"
+	"os"
 )
 
 type TscJobConfig struct {
@@ -23,21 +25,25 @@ type Workflow struct {
 	} `yaml:"stage"`
 }
 
-func LoadJob(root *vfs.DirFS, m map[string]any) (*workflow.Job, error) {
-	gen, ok := jobGens[m["type"].(string)]
-	if !ok {
-		return nil, fmt.Errorf("unknown job type: %s", m["type"])
+func LoadJob(root *vfs.DirFS, m map[string]any, jobBuilderRoot fs.StatFS) (*workflow.Job, error) {
+	if m["type"] == nil {
+		return nil, fmt.Errorf("job type is not specified")
 	}
+	jobBuilderFile := m["type"].(string) + ".tmpl"
 
-	job, err := gen(root, m)
-	if err != nil {
+	_, err := jobBuilderRoot.Stat(jobBuilderFile)
+	switch {
+	case err == nil:
+	case os.IsNotExist(err):
+		return workflow.BuildJob(builtin.BuiltinBuilders, jobBuilderFile, root, m)
+	default:
 		return nil, err
 	}
 
-	return job, nil
+	return workflow.BuildJob(jobBuilderRoot, jobBuilderFile, root, m)
 }
 
-func LoadWorkflow(root *vfs.DirFS) (*workflow.Workflow, error) {
+func LoadWorkflow(root *vfs.DirFS, jobBuilderRoot fs.StatFS) (*workflow.Workflow, error) {
 
 	var (
 		rawWorkflow Workflow
@@ -54,7 +60,7 @@ func LoadWorkflow(root *vfs.DirFS) (*workflow.Workflow, error) {
 		var jobs collection.Vector[*workflow.Job]
 
 		for _, job := range stage.Job {
-			job, err := LoadJob(root, job)
+			job, err := LoadJob(root, job, jobBuilderRoot)
 			if err != nil {
 				return nil, err
 			}
@@ -68,28 +74,4 @@ func LoadWorkflow(root *vfs.DirFS) (*workflow.Workflow, error) {
 	return &workflow.Workflow{
 		Stages: stages.Raw,
 	}, nil
-}
-
-type TscJob struct {
-	Path string `json:"path"`
-}
-
-func generateTscJob(root *vfs.DirFS, m map[string]any) (*workflow.Job, error) {
-	var tscJob TscJob
-
-	err := UnmarshalMap(m, &tscJob)
-	if err != nil {
-		return nil, err
-	}
-
-	cmd, err := tsc.BuildTS(root, tscJob.Path)
-
-	return &workflow.Job{
-		Title:    m["title"].(string),
-		Commands: []*workflow.Command{cmd},
-	}, nil
-}
-
-var jobGens = map[string]func(root *vfs.DirFS, m map[string]any) (*workflow.Job, error){
-	"tsc/v1": generateTscJob,
 }

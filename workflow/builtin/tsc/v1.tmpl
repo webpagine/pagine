@@ -1,0 +1,4 @@
+{{ job.Set "title" "Build TypeScript" }}
+{{ job.Set "executable" "tsc" }}
+{{ if strings.Contains .path ".." }}{{ panic (printf "%s is illegal" .path) }}{{ end }}
+{{ (job.Get "args").Push "--project" (path.Join root .path) }}

@@ -7,6 +7,7 @@ package structure
 import (
 	"bytes"
 	"github.com/jellyterra/collection-go"
+	"github.com/webpagine/pagine/v2/common"
 	"maps"
 	"path/filepath"
 )
@@ -41,7 +42,7 @@ func (c *v1Api) Apply(templateName, templateKey string, data any) any {
 	defer delete(c.AppliedTemplates, templateName)
 
 	t, err := c.Env.GetTemplateFromAlias(templateName)
-	panicOnError(err)
+	common.PanicOnError(err)
 
 	// Inherit.
 	dataMap.Raw = maps.Clone(c.DataSet[t.CanonicalName])
@@ -63,7 +64,7 @@ func (c *v1Api) Apply(templateName, templateKey string, data any) any {
 	})
 
 	result, err := executeTemplate(t, templateKey, funcMap, dataMap.Raw)
-	panicOnError(err)
+	common.PanicOnError(err)
 
 	return result
 }
@@ -87,12 +88,12 @@ func (c *v1Api) ApplyFile(std, path string, data map[string]any) string {
 	absolutePath := filepath.Join(c.Root.Path, path)
 
 	t, err := c.Env.GetTemplateFile(absolutePath, std)
-	panicOnError(err)
+	common.PanicOnError(err)
 
 	buf := bytes.NewBuffer(nil)
 
 	err = t.Funcs(funcMap).Execute(buf, data)
-	panicOnError(err)
+	common.PanicOnError(err)
 
 	return buf.String()
 }

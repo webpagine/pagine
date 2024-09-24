@@ -19,6 +19,8 @@ var (
 	optPublicDir = flag.String("public", "/tmp/"+filepath.Base(wd)+".public", "Location of public directory.")
 
 	optAddr = flag.String("serve", "", "Listen and Serve as HTTP.")
+
+	jobBuilderRoot = os.Getenv("PAGINE_JOB_BUILDER_ROOT")
 )
 
 func main() {
@@ -41,7 +43,7 @@ func _main() error {
 			return err
 		}
 	} else {
-		err := GenerateAll(root, dest, false)
+		err := GenerateAll(root, dest, jobBuilderRoot, false)
 		if err != nil {
 			return err
 		}

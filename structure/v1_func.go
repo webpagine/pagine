@@ -4,31 +4,34 @@
 
 package structure
 
-import "github.com/jellyterra/collection-go"
+import (
+	"github.com/jellyterra/collection-go"
+	"github.com/webpagine/pagine/v2/common"
+)
 
 func v1GetFuncMap(c *Context) map[string]any {
 	funcMap := map[string]any{
 
 		// Engine interaction API.
-		"api": WrapObject(&v1Api{Context: c}),
+		"api": common.WrapObject(&v1Api{Context: c}),
 
 		// Filepath processing.
-		"path": WrapObject(&v1Path{}),
+		"path": common.WrapObject(&common.V1Path{}),
 
 		// Rich text format renderer.
-		"render": WrapObject(&v1Render{Context: c}),
+		"render": common.WrapObject(&V1Render{Context: c}),
 
 		// v1Strings processing.
-		"strings": WrapObject(&v1Strings{}),
+		"strings": common.WrapObject(&common.V1Strings{}),
 
 		"This": func() map[string]any { return c.Data },
 	}
 
 	// Arithmetic.
-	collection.MergeRawMap(funcMap, v1Arithmetic)
+	collection.MergeRawMap(funcMap, common.V1Arithmetic)
 
 	// Type casting.
-	collection.MergeRawMap(funcMap, v1Cast)
+	collection.MergeRawMap(funcMap, common.V1Builtin)
 
 	return funcMap
 }

@@ -14,7 +14,7 @@ import (
 	"sync"
 )
 
-func CollectAndRunWorkflows(root, dest *vfs.DirFS) error {
+func CollectAndRunWorkflows(root, dest *vfs.DirFS, jobBuilderRoot fs.StatFS) error {
 	bases, err := CollectWorkflows(root, dest)
 	if err != nil {
 		return err
@@ -24,15 +24,26 @@ func CollectAndRunWorkflows(root, dest *vfs.DirFS) error {
 		return nil
 	}
 
-	var wg sync.WaitGroup
+	var workflows []*workflow.Workflow
 
 	for _, base := range bases {
+		wf, err := config.LoadWorkflow(base, jobBuilderRoot)
+		if err != nil {
+			return err
+		}
+
+		workflows = append(workflows, wf)
+	}
+
+	var wg sync.WaitGroup
+
+	for _, wf := range workflows {
 		wg.Add(1)
 
 		go func() {
 			defer wg.Done()
 
-			err := RunWorkflow(base)
+			err := RunWorkflow(wf)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -67,13 +78,8 @@ func CollectWorkflows(root, dest *vfs.DirFS) (dirs []*vfs.DirFS, _ error) {
 	})
 }
 
-func RunWorkflow(root *vfs.DirFS) error {
+func RunWorkflow(wf *workflow.Workflow) error {
 	var stageReports collection.Vector[*workflow.StageReport]
-
-	wf, err := config.LoadWorkflow(root)
-	if err != nil {
-		return err
-	}
 
 	for _, stage := range wf.Stages {
 		stageReport, err := stage.Run()

@@ -5,37 +5,38 @@
 package structure
 
 import (
+	"github.com/webpagine/pagine/v2/common"
 	"github.com/webpagine/pagine/v2/render"
 	"os"
 	"path/filepath"
 )
 
-type v1Render struct {
+type V1Render struct {
 	*Context
 }
 
-func (c *v1Render) FileByMimeType(mimeType, path string) string {
+func (c *V1Render) FileByMimeType(mimeType, path string) string {
 	renderer, err := render.ByMimeType(mimeType)
-	panicOnError(err)
-
+	common.PanicOnError(err)
+	
 	b, err := os.ReadFile(filepath.Join(c.Root.Path, path))
-	panicOnError(err)
+	common.PanicOnError(err)
 
 	result, err := renderer(b)
-	panicOnError(err)
+	common.PanicOnError(err)
 
 	return result
 }
 
-func (c *v1Render) FileByExtName(path string) string {
+func (c *V1Render) FileByExtName(path string) string {
 	renderer, err := render.ByExtName(path)
-	panicOnError(err)
+	common.PanicOnError(err)
 
 	b, err := os.ReadFile(filepath.Join(c.Root.Path, path))
-	panicOnError(err)
+	common.PanicOnError(err)
 
 	result, err := renderer(b)
-	panicOnError(err)
+	common.PanicOnError(err)
 
 	return result
 }

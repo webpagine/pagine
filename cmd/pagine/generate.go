@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func GenerateAll(root, dest *vfs.DirFS, isServing bool) error {
+func GenerateAll(root, dest *vfs.DirFS, jobBuilderRoot string, isServing bool) error {
 
 	env, err := config.LoadEnv(root)
 	if err != nil {
@@ -54,7 +54,7 @@ func GenerateAll(root, dest *vfs.DirFS, isServing bool) error {
 		return err
 	}
 
-	err = CollectAndRunWorkflows(root, dest)
+	err = CollectAndRunWorkflows(root, dest, os.DirFS(jobBuilderRoot).(fs.StatFS))
 	if err != nil {
 		return err
 	}

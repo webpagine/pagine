@@ -53,7 +53,7 @@ func Serve(root, dest *vfs.DirFS) error {
 		for {
 			if !updated.Load() {
 				updated.Store(true)
-				err := GenerateAll(root, dest, true)
+				err := GenerateAll(root, dest, jobBuilderRoot, true)
 				if err != nil {
 					fmt.Println(err)
 				}
