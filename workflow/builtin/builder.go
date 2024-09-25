@@ -6,5 +6,5 @@ package builtin
 
 import "embed"
 
-//go:embed tsc/*.tmpl
+//go:embed */*.tmpl
 var Builders embed.FS

@@ -1,0 +1,6 @@
+{{ if eq .title nil }}{{ panic "missing property: title" }}{{ end }}
+{{ if eq .input nil }}{{ panic "missing property: input" }}{{ end }}
+{{ if eq .output nil }}{{ panic "missing property: output" }}{{ end }}
+{{ job.Set "title" .title }}
+{{ job.Set "executable" "tailwindcss" }}
+{{ (job.Get "args").Push "--input" (path.Join root .input) "--output" (path.Join root .output) }}
