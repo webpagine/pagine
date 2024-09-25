@@ -9,7 +9,7 @@ require (
 	github.com/gomarkdown/markdown v0.0.0-20240419095408-642f0ee99ae2
 	github.com/gorilla/websocket v1.5.3
 	github.com/jellyterra/collection-go v0.0.3
-	github.com/jellyterra/go-fscopy v0.0.2
+	github.com/jellyterra/go-fscopy v0.0.4
 )
 
 require (
