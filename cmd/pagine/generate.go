@@ -54,7 +54,11 @@ func GenerateAll(root, dest *vfs.DirFS, jobBuilderRoot string, isServing bool) e
 		return err
 	}
 
-	err = CollectAndRunWorkflows(root, dest, os.DirFS(jobBuilderRoot).(fs.StatFS))
+	if jobBuilderRoot == "" {
+		err = CollectAndRunWorkflows(root, dest, nil)
+	} else {
+		err = CollectAndRunWorkflows(root, dest, os.DirFS(jobBuilderRoot).(fs.StatFS))
+	}
 	if err != nil {
 		return err
 	}

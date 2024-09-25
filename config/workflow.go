@@ -31,6 +31,10 @@ func LoadJob(root *vfs.DirFS, m map[string]any, jobBuilderRoot fs.StatFS) (*work
 	}
 	jobBuilderFile := m["type"].(string) + ".tmpl"
 
+	if jobBuilderRoot == nil {
+		return workflow.BuildJob(builtin.BuiltinBuilders, jobBuilderFile, root, m)
+	}
+
 	_, err := jobBuilderRoot.Stat(jobBuilderFile)
 	switch {
 	case err == nil:
