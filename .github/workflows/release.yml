@@ -1,13 +1,16 @@
 # This workflow will build a golang project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
-name: Create Release
+name: Release
 
 on:
   push:
     # Sequence of patterns matched against refs/tags
     tags:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -28,28 +31,28 @@ jobs:
         shell: bash
         run: |
           set +e
-          go tool dist list | while IFS='/' read -ra TARGET
-          do
-          export GOOS=${TARGET[0]}
-          export GOARCH=${TARGET[1]}
-          echo "Building target $GOOS/$GOARCH"
-          go build -o ~/build/pagine-${{ github.ref }}-$GOOS-$GOARCH ./cmd/pagine
-          done
+          go build -o ~/build/pagine-${{ github.ref_name }}-linux-amd64 ./cmd/pagine
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pagine
-          path: ~/build/*
+      - name: Compress via Zstd
+        run: zstd ~/build/pagine-${{ github.ref_name }}-*
+
+      - name: Generate Checksums
+        run: sha256sum ~/build/*zst > ~/build/SHA256SUMS.txt
 
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          GITHUB_TOKEN: ${{ github.token }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          body: Changelog for ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
+          release_name: ${{ github.ref_name }}
+          body: Changelog for ${{ github.ref_name }}
           draft: true
           prerelease: false
+
+      - name: Upload Artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run:
+          gh release -R ${{ github.repository }} upload ${{ github.ref_name }} ~/build/SHA256SUMS.txt ~/build/*zst --clobber
