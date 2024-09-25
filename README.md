@@ -1,7 +1,6 @@
-
 <img src="https://github.com/jellyterra/artworks/raw/master/logo/pagine_v2.svg" height="140" alt="Pagine logo" />
 
-# Pagine v2.4.1
+# Pagine v2.4.3
 
 Pagine is an high-performance website constructor that makes full use of multicore hardware.
 
@@ -28,7 +27,8 @@ Supported rich text formats:
 
 ### Binaries
 
-Find the executable that matches your OS and architecture in [releases](https://github.com/webpagine/pagine/v2/releases).
+Find the executable that matches your OS and architecture
+in [releases](https://github.com/webpagine/pagine/v2/releases).
 
 ### Build from source
 
@@ -37,18 +37,19 @@ $ go install github.com/webpagine/pagine/v2/cmd/pagine@v2.4.1
 ```
 
 > [!TIP]
-> Install Pagine via Go mod is recommended for non-amd64 platforms. Choose Go toolchain for your platform [here](https://go.dev/dl).
+> Install Pagine via Go mod is recommended for non-amd64 platforms. Choose Go toolchain for your
+> platform [here](https://go.dev/dl).
 
 ## Usage
 
 Usage of pagine:
-- `-public` string
-  - Location of public directory. (default `/tmp/$(basename $PWD).public`)
-- `-root` string
-  - Site root. (default `$PWD`)
-- `-serve` string
-  - Specify the port to listen and serve as HTTP.
 
+- `-public` string
+    - Location of public directory. (default `/tmp/$(basename $PWD).public`)
+- `-root` string
+    - Site root. (default `$PWD`)
+- `-serve` string
+    - Specify the port to listen and serve as HTTP.
 
 ### Generate
 
@@ -71,7 +72,8 @@ It automatically executes generation when file changes are detected by `inotify`
 > Incremental generation is not implemented yet.<br/>
 > Set the `--public` under `/tmp` is recommended to reduce hard disk writes.
 
-Since v2.1.0, the server provides a WebSocket interface at `/ws` to provide event monitoring for the client, such as page updates.
+Since v2.1.0, the server provides a WebSocket interface at `/ws` to provide event monitoring for the client, such as
+page updates.
 
 > [!CAUTION]
 > Exposing your Pagine server to the public network might be risky!
@@ -84,6 +86,7 @@ Since v2.1.0, the server provides a WebSocket interface at `/ws` to provide even
 Template is a set of page frames (Go template file) and assets (e.g. SVGs, stylesheets and scripts).
 
 Manifest of one template looks like:
+
 ```yaml
 manifest:
   canonical: "com.symboltics.pagine.genesis" # Canonical name
@@ -101,11 +104,13 @@ templates:
 To the Go templates files syntax, see [text/template](https://pkg.go.dev/text/template).
 
 Example:  `page.html`
+
 ```html
+
 <html lang="{{ .lang }}">
 <head>
-  <title>{{ .title }}</title>
-  <link rel="stylesheet" href="{{ api.Attr.templateBase }}/css/base.css" />
+    <title>{{ .title }}</title>
+    <link rel="stylesheet" href="{{ api.Attr.templateBase }}/css/base.css"/>
 </head>
 <body>
 {{ template "header.html" . }}
@@ -145,6 +150,7 @@ Each template has its alias that defined in `env` as the namespace.
 Levels can override fields propagated from parents.
 
 Example: `/metadata.yaml`
+
 ```yaml
 genesis:
   title: "Pagine"
@@ -161,6 +167,7 @@ genesis:
 ### Unit
 
 Example: `/unit.yaml`
+
 ```yaml
 unit:
   - template: "genesis"      # Which template to use.
@@ -187,6 +194,7 @@ All paths are based on the directory where the `workflow.yaml` is located.
 Workflows are executed in parallel.
 
 Example: `workflow.yaml`
+
 ```yaml
 stage:
   - job:
@@ -204,7 +212,29 @@ Each stage contains a set of jobs.
 
 Jobs are executed in parallel.
 
-## Builtin Job Types
+### Job Builder
+
+The **Job Builder** is one special-purpose template like embedded program.
+It accepts API and configuration information from the engine and outputs processed job information to the engine.
+
+Environment variable `PAGINE_JOB_BUILDER_ROOT` has been used to specify the root location of external job builders.
+
+Builder lookup order:
+
+1. `PAGINE_JOB_BUILDER_ROOT` from env.
+2. Builtin: `/workflow/builtin` in this repository.
+
+| API | Type             | Description |
+|-----|------------------|-------------|
+| job | `map[string]any` | Job field.  |
+
+| Field of `job` | Type       | Description              |
+|----------------|------------|--------------------------|
+| `title`        | `string`   | Title show in log output |
+| `executable`   | `string`   | Executable in `$PATH`    |
+| `args`         | `[]string` | Arguments                |
+
+## Builtin Job Builders
 
 ### TypeScript compiler (tsc)
 
@@ -220,22 +250,44 @@ Make sure `tsc` had been installed on target machine.
 
 ### Arithmetic
 
-| Func  | Args      | Result |
-|-------|-----------|--------|
-| `add` | a, b: Int | Int    |
-| `sub` | a, b: Int | Int    |
-| `mul` | a, b: Int | Int    |
-| `div` | a, b: Int | Int    |
-| `mod` | a,b : Int | Int    |
+| Func  | Params      | Result |
+|-------|-------------|--------|
+| `add` | `a, b: int` | `int`  |
+| `sub` | `a, b: int` | `int`  |
+| `mul` | `a, b: int` | `int`  |
+| `div` | `a, b: int` | `int`  |
+| `mod` | `a, b: int` | `int`  |
+
+### Slice
+
+| Func        | Params | Result  | Description          |
+|-------------|--------|---------|----------------------|
+| `makeSlice` |        | `[]any` | Make an empty slice. |
+
+| Method of Slice | Params            | Result  | Description                                         |
+|-----------------|-------------------|---------|-----------------------------------------------------|
+| `Len`           |                   | `int`   | Get length of slice.                                |
+| `Index`         | `i: int`          | `any`   | Get element in slice.                               |     
+| `Push`          | `e: ...any`       |         | Push to the end of slice.                           |
+| `Slice`         | `start, end: int` | `[]any` | Get elements from `start` to `end`, excluding `end` |
+
+### Map
+
+| Method of Map | Params                    | Result | Description                    |
+|---------------|---------------------------|--------|--------------------------------|
+| `Get`         | `key: string`             | `any`  | Get element from map.          |
+| `Set`         | `key: string, value: any` |        | Set element to map.            |
+| `Has`         | `key: string`             | `bool` | Return true if the key exists. |
+| `Delete`      | `key: string`             |        | Delete key from map.           |
 
 ### Engine API
 
-| Func            |                                                        | Description                                                                                      |
-|-----------------|--------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| `api.Attr`      |                                                        | Get meta information in the form of map about units, hierarchy and templates provided by engine. |
-| `api.Apply`     | templateName, templateKey: String, data map[string]Any | Invoke a template.                                                                               |
-| `api.ApplyFile` | apiVer, path: String, data map[string]any              | Invoke single template file.                                                                     | 
-| `This`          |                                                        | It returns the root node of metadata of the template.                                            |
+| Func            | Params                                                    | Description                                                                                      |
+|-----------------|-----------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `api.Attr`      |                                                           | Get meta information in the form of map about units, hierarchy and templates provided by engine. |
+| `api.Apply`     | `templateName, templateKey: string, data: map[string]any` | Invoke a template.                                                                               |
+| `api.ApplyFile` | `apiVer, path: string, data: map[string]any`              | Invoke single template file.                                                                     | 
+| `This`          |                                                           | It returns the root node of metadata of the template.                                            |
 
 | api.Attr.      | Description                                     |
 |----------------|-------------------------------------------------|
@@ -262,10 +314,10 @@ Example: `{{ strings.HasSuffix .logo.src ".svg" }}`
 
 Path starts from where the unit is.
 
-| Func                    | Args                   | Description                                         |
-|-------------------------|------------------------|-----------------------------------------------------|
-| `render.FileByExtName`  | path: String           | Query MIME type by file extension name then render. |
-| `render.FileByMimeType` | mimeType, path: String | Render file content by given MIME type.             |
+| Func                    | Args                     | Description                                         |
+|-------------------------|--------------------------|-----------------------------------------------------|
+| `render.FileByExtName`  | `path: string`           | Query MIME type by file extension name then render. |
+| `render.FileByMimeType` | `mimeType, path: string` | Render file content by given MIME type.             |
 
 | Format   | MIME Type       | File Extension Name |
 |----------|-----------------|---------------------|
@@ -285,6 +337,7 @@ Upload `../public` to your server.
 ### Deploy to GitHub Pages via GitHub Actions (recommended)
 
 GitHub Actions workflow file content: `.github/workflows/pagine.yml`
+
 ```yaml
 name: Deploy
 
