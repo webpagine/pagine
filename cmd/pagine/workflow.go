@@ -96,10 +96,12 @@ func RunWorkflow(wf *workflow.Workflow) error {
 
 				switch {
 				case cmdReport.Err != nil:
-					fmt.Printf("\n===== Stage %d - %s: %s\n", stageIndex, jobReport.Job.Title, cmdReport.Err.Error())
+					fmt.Println("\n===== Stage", stageIndex, "-", jobReport.Job.Title, ":", cmdReport.Err.Error())
+					fmt.Println(cmdReport.Command.Exec, cmdReport.Command.Args)
+					fmt.Print("\n", cmdReport.Output.String())
 				case cmdReport.Output.Len() == 0:
 				default:
-					fmt.Printf("\n===== Stage %d - %s\n", stageIndex, jobReport.Job.Title)
+					fmt.Println("\n===== Stage", stageIndex, "-", jobReport.Job.Title)
 					fmt.Print(cmdReport.Output.String())
 				}
 			}
