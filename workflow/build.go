@@ -15,7 +15,7 @@ import (
 	"text/template"
 )
 
-func BuildJob(builderTmplRoot fs.FS, builderTmpl string, root *vfs.DirFS, config map[string]any) (*Job, error) {
+func BuildJob(builderTmplRoot fs.FS, builderTmpl string, origin, root *vfs.DirFS, config map[string]any) (*Job, error) {
 	var args common.Slice
 	var export = common.Map{
 		Raw: map[string]any{
@@ -26,6 +26,7 @@ func BuildJob(builderTmplRoot fs.FS, builderTmpl string, root *vfs.DirFS, config
 	}
 
 	funcMap := map[string]any{
+		"origin":  common.WrapObject(origin.Path),
 		"root":    common.WrapObject(root.Path),
 		"job":     common.WrapObject(&export),
 		"path":    common.WrapObject(common.V1Path{}),

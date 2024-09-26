@@ -1,7 +1,9 @@
-{{ if eq .title nil }}{{ panic "missing property: title" }}{{ end }}
 {{ if eq .config nil }}{{ panic "missing property: config" }}{{ end }}
 {{ if eq .input nil }}{{ panic "missing property: input" }}{{ end }}
 {{ if eq .output nil }}{{ panic "missing property: output" }}{{ end }}
-{{ job.Set "title" .title }}
+{{ if strings.Contains .config ".." }}{{ panic (printf "%s is illegal" .config) }}{{ end }}
+{{ if strings.Contains .input ".." }}{{ panic (printf "%s is illegal" .input) }}{{ end }}
+{{ if strings.Contains .output ".." }}{{ panic (printf "%s is illegal" .output) }}{{ end }}
+{{ job.Set "title" "Build Tailwind CSS" }}
 {{ job.Set "executable" "tailwindcss" }}
-{{ (job.Get "args").Push "-c" (path.Join root .config) "--input" (path.Join root .input) "--output" (path.Join root .output) }}
+{{ (job.Get "args").Push "-c" (path.Join origin .config) "--input" (path.Join origin .input) "--output" (path.Join root .output) }}

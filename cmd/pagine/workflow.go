@@ -15,7 +15,7 @@ import (
 )
 
 func CollectAndRunWorkflows(root, dest *vfs.DirFS, jobBuilderRoot fs.StatFS) error {
-	bases, err := CollectWorkflows(root, dest)
+	bases, err := CollectWorkflows(root)
 	if err != nil {
 		return err
 	}
@@ -27,7 +27,16 @@ func CollectAndRunWorkflows(root, dest *vfs.DirFS, jobBuilderRoot fs.StatFS) err
 	var workflows []*workflow.Workflow
 
 	for _, base := range bases {
-		wf, err := config.LoadWorkflow(base, jobBuilderRoot)
+		origin, err := root.Chroot(base)
+		if err != nil {
+			return err
+		}
+		wfRoot, err := dest.Chroot(base)
+		if err != nil {
+			return err
+		}
+
+		wf, err := config.LoadWorkflow(origin, wfRoot, jobBuilderRoot)
 		if err != nil {
 			return err
 		}
@@ -56,7 +65,7 @@ func CollectAndRunWorkflows(root, dest *vfs.DirFS, jobBuilderRoot fs.StatFS) err
 	return nil
 }
 
-func CollectWorkflows(root, dest *vfs.DirFS) (dirs []*vfs.DirFS, _ error) {
+func CollectWorkflows(root *vfs.DirFS) (dirs []string, _ error) {
 	return dirs, fs.WalkDir(root, "/", func(path string, _ fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -67,12 +76,7 @@ func CollectWorkflows(root, dest *vfs.DirFS) (dirs []*vfs.DirFS, _ error) {
 			return nil // Skip.
 		}
 
-		sub, err := dest.Chroot(path)
-		if err != nil {
-			return err
-		}
-
-		dirs = append(dirs, sub)
+		dirs = append(dirs, path)
 
 		return nil
 	})

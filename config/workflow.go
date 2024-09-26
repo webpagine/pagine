@@ -25,29 +25,29 @@ type Workflow struct {
 	} `yaml:"stage"`
 }
 
-func LoadJob(root *vfs.DirFS, m map[string]any, jobBuilderRoot fs.StatFS) (*workflow.Job, error) {
+func LoadJob(origin, root *vfs.DirFS, m map[string]any, jobBuilderRoot fs.StatFS) (*workflow.Job, error) {
 	if m["type"] == nil {
 		return nil, fmt.Errorf("job type is not specified")
 	}
 	jobBuilderFile := m["type"].(string) + ".tmpl"
 
 	if jobBuilderRoot == nil {
-		return workflow.BuildJob(builtin.Builders, jobBuilderFile, root, m)
+		return workflow.BuildJob(builtin.Builders, jobBuilderFile, origin, root, m)
 	}
 
 	_, err := jobBuilderRoot.Stat(jobBuilderFile)
 	switch {
 	case err == nil:
 	case os.IsNotExist(err):
-		return workflow.BuildJob(builtin.Builders, jobBuilderFile, root, m)
+		return workflow.BuildJob(builtin.Builders, jobBuilderFile, origin, root, m)
 	default:
 		return nil, err
 	}
 
-	return workflow.BuildJob(jobBuilderRoot, jobBuilderFile, root, m)
+	return workflow.BuildJob(jobBuilderRoot, jobBuilderFile, origin, root, m)
 }
 
-func LoadWorkflow(root *vfs.DirFS, jobBuilderRoot fs.StatFS) (*workflow.Workflow, error) {
+func LoadWorkflow(origin, root *vfs.DirFS, jobBuilderRoot fs.StatFS) (*workflow.Workflow, error) {
 
 	var (
 		rawWorkflow Workflow
@@ -64,7 +64,7 @@ func LoadWorkflow(root *vfs.DirFS, jobBuilderRoot fs.StatFS) (*workflow.Workflow
 		var jobs collection.Vector[*workflow.Job]
 
 		for _, job := range stage.Job {
-			job, err := LoadJob(root, job, jobBuilderRoot)
+			job, err := LoadJob(origin, root, job, jobBuilderRoot)
 			if err != nil {
 				return nil, err
 			}
